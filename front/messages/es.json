@@ -14,7 +14,8 @@
     "viewAllMatches": "Ver todos los partidos",
     "viewStandings": "Ver posiciones",
     "metaTitle": "Azul y Oro — Partidos, plantel y posiciones de Boca",
-    "metaDescription": "Seguí a Boca Juniors: próximos partidos, resultados, plantel y tabla de posiciones. Sitio no oficial de hinchas."
+    "metaDescription": "Seguí a Boca Juniors: próximos partidos, resultados, plantel y tabla de posiciones. Sitio no oficial de hinchas.",
+    "heroCtaStadium": "Explorar La Bombonera"
   },
   "Nav": {
     "home": "Inicio",
@@ -24,7 +25,8 @@
     "news": "Noticias",
     "transfers": "Fichajes",
     "live": "En vivo",
-    "login": "Ingresar"
+    "login": "Ingresar",
+    "stadium": "La Bombonera"
   },
   "Footer": {
     "disclaimer": "Sitio no oficial. No afiliado, patrocinado ni avalado por el Club Atlético Boca Juniors ni sus entidades relacionadas. Todas las marcas pertenecen a sus respectivos titulares.",
@@ -244,5 +246,48 @@
     "bannerText": "Usamos solo cookies necesarias y analítica sin cookies (Plausible). No se activan cookies no esenciales.",
     "bannerLink": "Ver política de cookies",
     "bannerAccept": "Entendido"
+  },
+  "Bombonera": {
+    "metaTitle": "La Bombonera en 3D",
+    "metaDescription": "Recorré una reinterpretación interactiva y no oficial de La Bombonera: exteriores, acceso, túnel, campo y tribunas.",
+    "eyebrow": "Experiencia interactiva 3D",
+    "title": "La cancha que late, desde adentro.",
+    "description": "Explorá los alrededores, cruzá el acceso y descubrí el estadio desde seis puntos de vista. Elegí el recorrido guiado o tomá el control de la cámara.",
+    "unofficial": "Reinterpretación artística no oficial · Sin afiliación con el club",
+    "sourcesEyebrow": "Base documental",
+    "sourcesTitle": "Reconstruida con evidencia, no de memoria.",
+    "sourcesDescription": "La experiencia adapta el modelo 3D de A1905 bajo CC BY 4.0 y calibra su escala y entorno con el relevamiento UPV 2025, OpenStreetMap y registros visuales y de obras 2025–2026. Es una representación orientativa: no reemplaza un plano as-built autorizado por el club.",
+    "sources": {
+      "upv": "Planos UPV 2025",
+      "osm": "Huella OSM",
+      "works": "Obras actuales",
+      "aerials": "Aéreas 2025 · CC BY-SA",
+      "model": "Modelo 3D A1905 · CC BY 4.0"
+    },
+    "experience": {
+      "ariaLabel": "Recorrido 3D interactivo del estadio",
+      "loading": "Preparando el estadio…",
+      "webglUnavailable": "Tu navegador no puede mostrar la experiencia 3D. Podés seguir navegando por el contenido de la página.",
+      "controlTitle": "La Bombonera 360°",
+      "guidedHint": "Avanzá por el recorrido o elegí un punto del estadio.",
+      "freeHint": "Arrastrá para mirar, usá la rueda o el gesto de pinza para acercarte.",
+      "guidedMode": "Tour",
+      "freeMode": "Libre",
+      "modeLabel": "Modo de navegación",
+      "tourLabel": "Puntos del recorrido",
+      "previousView": "Ir al punto anterior",
+      "nextView": "Ir al punto siguiente",
+      "resetView": "Volver a la vista seleccionada",
+      "currentView": "Vista actual: {view}.",
+      "qualityReduced": "La calidad visual se redujo para mantener un movimiento fluido.",
+      "views": {
+        "exterior": "Exterior",
+        "access": "Acceso",
+        "tunnel": "Túnel",
+        "field": "Campo",
+        "popular": "Popular",
+        "platea": "Platea"
+      }
+    }
   }
 }

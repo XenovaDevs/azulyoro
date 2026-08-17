@@ -22,6 +22,7 @@ export const routing = defineRouting({
     "/noticias": { es: "/noticias", en: "/news" },
     "/noticias/[slug]": { es: "/noticias/[slug]", en: "/news/[slug]" },
     "/fichajes": { es: "/fichajes", en: "/transfers" },
+    "/bombonera": { es: "/la-bombonera", en: "/stadium" },
     "/newsletter": { es: "/newsletter", en: "/newsletter" },
     "/newsletter/confirmar": { es: "/newsletter/confirmar", en: "/newsletter/confirm" },
     "/newsletter/baja": { es: "/newsletter/baja", en: "/newsletter/unsubscribe" },

@@ -70,6 +70,12 @@ export default async function Home({
           >
             {t("heroCtaSquad")}
           </Link>
+          <Link
+            href="/bombonera"
+            className="rounded-full border border-[var(--oro-500)]/60 px-5 py-2.5 text-sm font-semibold text-[var(--oro-400)] transition-colors hover:bg-[var(--oro-500)]/10"
+          >
+            {t("heroCtaStadium")}
+          </Link>
         </div>
       </section>
 

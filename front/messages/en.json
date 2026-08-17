@@ -14,7 +14,8 @@
     "viewAllMatches": "View all matches",
     "viewStandings": "View standings",
     "metaTitle": "Azul y Oro — Boca matches, squad and standings",
-    "metaDescription": "Follow Boca Juniors: upcoming matches, results, squad and standings table. Unofficial fan site."
+    "metaDescription": "Follow Boca Juniors: upcoming matches, results, squad and standings table. Unofficial fan site.",
+    "heroCtaStadium": "Explore the stadium"
   },
   "Nav": {
     "home": "Home",
@@ -24,7 +25,8 @@
     "news": "News",
     "transfers": "Transfers",
     "live": "Live",
-    "login": "Log in"
+    "login": "Log in",
+    "stadium": "Stadium"
   },
   "Footer": {
     "disclaimer": "Unofficial site. Not affiliated with, sponsored or endorsed by Club Atlético Boca Juniors or its related entities. All trademarks belong to their respective owners.",
@@ -244,5 +246,48 @@
     "bannerText": "We only use necessary cookies and cookieless analytics (Plausible). No non-essential cookies are set.",
     "bannerLink": "See cookie policy",
     "bannerAccept": "Got it"
+  },
+  "Bombonera": {
+    "metaTitle": "La Bombonera in 3D",
+    "metaDescription": "Explore an interactive, unofficial reimagining of La Bombonera: the surroundings, entrance, tunnel, pitch and stands.",
+    "eyebrow": "Interactive 3D experience",
+    "title": "The stadium that beats, from the inside.",
+    "description": "Explore the surroundings, enter through the gates and discover the stadium from six viewpoints. Follow the guided route or take control of the camera.",
+    "unofficial": "Unofficial artistic reimagining · Not affiliated with the club",
+    "sourcesEyebrow": "Documented baseline",
+    "sourcesTitle": "Reconstructed from evidence, not memory.",
+    "sourcesDescription": "The experience adapts A1905's 3D model under CC BY 4.0 and calibrates its scale and surroundings with the 2025 UPV survey, OpenStreetMap, and 2025–2026 visual and construction records. It is an indicative representation, not a club-authorized as-built survey.",
+    "sources": {
+      "upv": "UPV 2025 plans",
+      "osm": "OSM footprint",
+      "works": "Current works",
+      "aerials": "2025 aerials · CC BY-SA",
+      "model": "3D model by A1905 · CC BY 4.0"
+    },
+    "experience": {
+      "ariaLabel": "Interactive 3D stadium tour",
+      "loading": "Preparing the stadium…",
+      "webglUnavailable": "Your browser cannot display the 3D experience. You can still browse the page content.",
+      "controlTitle": "La Bombonera 360°",
+      "guidedHint": "Move through the tour or choose a place in the stadium.",
+      "freeHint": "Drag to look around, then use the wheel or pinch gesture to zoom.",
+      "guidedMode": "Tour",
+      "freeMode": "Free",
+      "modeLabel": "Navigation mode",
+      "tourLabel": "Tour viewpoints",
+      "previousView": "Go to the previous viewpoint",
+      "nextView": "Go to the next viewpoint",
+      "resetView": "Return to the selected viewpoint",
+      "currentView": "Current viewpoint: {view}.",
+      "qualityReduced": "Visual quality was reduced to keep movement smooth.",
+      "views": {
+        "exterior": "Exterior",
+        "access": "Entrance",
+        "tunnel": "Tunnel",
+        "field": "Pitch",
+        "popular": "Terrace",
+        "platea": "Grandstand"
+      }
+    }
   }
 }

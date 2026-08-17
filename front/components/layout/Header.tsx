@@ -9,6 +9,7 @@ const NAV = [
   { href: "/posiciones", key: "standings" },
   { href: "/noticias", key: "news" },
   { href: "/fichajes", key: "transfers" },
+  { href: "/bombonera", key: "stadium" },
 ] as const;
 
 export function Header() {
@@ -21,7 +22,7 @@ export function Header() {
           <BrandMark />
         </Link>
 
-        <nav className="hidden items-center gap-5 text-sm font-medium md:flex">
+        <nav className="hidden items-center gap-4 text-sm font-medium lg:flex">
           {NAV.map((item) => (
             <Link
               key={item.href}

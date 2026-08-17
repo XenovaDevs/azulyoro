@@ -33,6 +33,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     "/plantel",
     "/posiciones",
     "/en-vivo",
+    "/bombonera",
   ];
 
   // Dynamic slugs — tolerate the API being unavailable at build time.
