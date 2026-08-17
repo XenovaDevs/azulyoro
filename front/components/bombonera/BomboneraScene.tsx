@@ -34,18 +34,38 @@ type BomboneraSceneProps = {
 };
 
 const GOLD = "#f1c52b";
+const BUILDING_PALETTE = [
+  "#9b8d7a",
+  "#8d5748",
+  "#b6a37f",
+  "#88978f",
+  "#a98a83",
+  "#747b7d",
+  "#9daeb0",
+] as const;
+const ROOF_PALETTE = ["#4f4d48", "#6a584d", "#756b58", "#59615d"] as const;
+
+type UrbanInstance = {
+  key: number | string;
+  position: readonly [number, number, number];
+  rotation?: readonly [number, number, number];
+  scale?: readonly [number, number, number];
+};
+
+function buildingShape(building: ContextBuilding, invertZ = false) {
+  const shape = new THREE.Shape();
+  building.footprint.forEach(([x, z], index) => {
+    const shapeZ = invertZ ? -z : z;
+    if (index === 0) shape.moveTo(x, shapeZ);
+    else shape.lineTo(x, shapeZ);
+  });
+  shape.closePath();
+  return shape;
+}
 
 function createContextGeometry(buildings: readonly ContextBuilding[]) {
-  const palette = ["#8e7c68", "#9d866f", "#777e7d", "#ad9d7c", "#806d60"];
   const geometries = buildings.map((building) => {
-    const shape = new THREE.Shape();
-    building.footprint.forEach(([x, z], index) => {
-      if (index === 0) shape.moveTo(x, z);
-      else shape.lineTo(x, z);
-    });
-    shape.closePath();
-
-    const geometry = new THREE.ExtrudeGeometry(shape, {
+    const geometry = new THREE.ExtrudeGeometry(buildingShape(building), {
       bevelEnabled: false,
       curveSegments: 1,
       depth: building.height,
@@ -54,7 +74,9 @@ function createContextGeometry(buildings: readonly ContextBuilding[]) {
     geometry.rotateX(Math.PI / 2);
     geometry.translate(0, building.height, 0);
 
-    const color = new THREE.Color(palette[building.id % palette.length]);
+    const color = new THREE.Color(
+      BUILDING_PALETTE[building.id % BUILDING_PALETTE.length],
+    );
     const colorValues = new Float32Array(
       geometry.getAttribute("position").count * 3,
     );
@@ -73,21 +95,219 @@ function createContextGeometry(buildings: readonly ContextBuilding[]) {
   return merged;
 }
 
+function createRoofGeometry(buildings: readonly ContextBuilding[]) {
+  const geometries = buildings.map((building) => {
+    const geometry = new THREE.ShapeGeometry(buildingShape(building, true));
+    geometry.rotateX(-Math.PI / 2);
+    geometry.translate(0, building.height + 0.035, 0);
+
+    const color = new THREE.Color(
+      ROOF_PALETTE[building.id % ROOF_PALETTE.length],
+    );
+    const colorValues = new Float32Array(
+      geometry.getAttribute("position").count * 3,
+    );
+    for (let index = 0; index < colorValues.length; index += 3) {
+      colorValues[index] = color.r;
+      colorValues[index + 1] = color.g;
+      colorValues[index + 2] = color.b;
+    }
+    geometry.setAttribute("color", new THREE.BufferAttribute(colorValues, 3));
+    return geometry;
+  });
+
+  const merged = mergeGeometries(geometries, false) ?? new THREE.BufferGeometry();
+  geometries.forEach((geometry) => geometry.dispose());
+  return merged;
+}
+
+function buildingCenter(building: ContextBuilding) {
+  const [x, z] = building.footprint.reduce(
+    (sum, point) => [sum[0] + point[0], sum[1] + point[1]],
+    [0, 0],
+  );
+  return [x / building.footprint.length, z / building.footprint.length] as const;
+}
+
+function createFacadeWindows(buildings: readonly ContextBuilding[]) {
+  const windows: UrbanInstance[] = [];
+  buildings.forEach((building) => {
+    if (building.id % 4 !== 0) return;
+
+    let longestEdge = {
+      length: 0,
+      start: building.footprint[0],
+      end: building.footprint[1],
+    };
+    building.footprint.forEach((point, index) => {
+      const next = building.footprint[(index + 1) % building.footprint.length];
+      const length = Math.hypot(next[0] - point[0], next[1] - point[1]);
+      if (length > longestEdge.length) {
+        longestEdge = { length, start: point, end: next };
+      }
+    });
+
+    const dx = longestEdge.end[0] - longestEdge.start[0];
+    const dz = longestEdge.end[1] - longestEdge.start[1];
+    const rotationY = -Math.atan2(dz, dx);
+    const floors = Math.min(3, Math.max(1, Math.floor((building.height - 1.5) / 2.7)));
+    for (let floor = 0; floor < floors; floor += 1) {
+      [0.34, 0.66].forEach((progress, windowIndex) => {
+        windows.push({
+          key: `${building.id}-${floor}-${windowIndex}`,
+          position: [
+            THREE.MathUtils.lerp(longestEdge.start[0], longestEdge.end[0], progress),
+            2.2 + floor * 2.45,
+            THREE.MathUtils.lerp(longestEdge.start[1], longestEdge.end[1], progress),
+          ],
+          rotation: [0, rotationY, 0],
+          scale: [Math.min(1.25, longestEdge.length * 0.13), 0.62, 0.085],
+        });
+      });
+    }
+  });
+  return windows.slice(0, 210);
+}
+
+const FACADE_WINDOWS = createFacadeWindows(CONTEXT_BUILDINGS);
+const ROOFTOP_TANKS: readonly UrbanInstance[] = CONTEXT_BUILDINGS.filter(
+  (building) => building.id % 11 === 0,
+)
+  .slice(0, 18)
+  .map((building) => {
+    const [x, z] = buildingCenter(building);
+    return {
+      key: building.id,
+      position: [x, building.height + 0.8, z],
+    };
+  });
+const STREET_TREES: readonly UrbanInstance[] = [
+  ...[-44, -18, 8, 34, 60].flatMap((z, index) => [
+    { key: index * 2, position: [-121, 0, z] as const },
+    { key: index * 2 + 1, position: [121, 0, z] as const },
+  ]),
+  ...[-78, -42, 42, 78].map((x, index) => ({
+    key: index + 20,
+    position: [x, 0, -73] as const,
+  })),
+];
+const STREET_LIGHTS = STREET_TREES.filter((_, index) => index % 2 === 0);
+
 function UrbanFabric({ quality }: { quality: SceneQuality }) {
   const geometry = useMemo(
-    () =>
-      createContextGeometry(
-        quality === "high" ? CONTEXT_BUILDINGS : CONTEXT_BUILDINGS.slice(0, 52),
-      ),
+    () => {
+      const buildings =
+        quality === "high" ? CONTEXT_BUILDINGS : CONTEXT_BUILDINGS.slice(0, 52);
+      return {
+        roofs: quality === "high" ? createRoofGeometry(buildings) : null,
+        walls: createContextGeometry(buildings),
+      };
+    },
     [quality],
   );
 
-  useEffect(() => () => geometry.dispose(), [geometry]);
+  useEffect(
+    () => () => {
+      geometry.roofs?.dispose();
+      geometry.walls.dispose();
+    },
+    [geometry],
+  );
 
   return (
-    <mesh geometry={geometry} castShadow={quality === "high"} receiveShadow>
-      <meshStandardMaterial vertexColors roughness={0.93} />
-    </mesh>
+    <group>
+      <mesh
+        geometry={geometry.walls}
+        castShadow={quality === "high"}
+        receiveShadow
+      >
+        <meshStandardMaterial vertexColors roughness={0.94} />
+      </mesh>
+      {geometry.roofs ? (
+        <mesh geometry={geometry.roofs} receiveShadow>
+          <meshStandardMaterial vertexColors roughness={0.88} />
+        </mesh>
+      ) : null}
+    </group>
+  );
+}
+
+function UrbanDetails() {
+  return (
+    <group>
+      <Instances limit={FACADE_WINDOWS.length}>
+        <boxGeometry />
+        <meshStandardMaterial
+          color="#263b45"
+          metalness={0.08}
+          roughness={0.38}
+        />
+        {FACADE_WINDOWS.map((window) => (
+          <Instance
+            key={window.key}
+            position={window.position}
+            rotation={window.rotation}
+            scale={window.scale}
+          />
+        ))}
+      </Instances>
+
+      <Instances limit={ROOFTOP_TANKS.length}>
+        <cylinderGeometry args={[0.76, 0.88, 1.55, 10]} />
+        <meshStandardMaterial color="#353b3b" roughness={0.76} />
+        {ROOFTOP_TANKS.map((tank) => (
+          <Instance key={tank.key} position={tank.position} />
+        ))}
+      </Instances>
+
+      <Instances limit={STREET_TREES.length}>
+        <cylinderGeometry args={[0.18, 0.24, 3.4, 7]} />
+        <meshStandardMaterial color="#655140" roughness={1} />
+        {STREET_TREES.map((tree) => (
+          <Instance
+            key={tree.key}
+            position={[tree.position[0], 1.7, tree.position[2]]}
+          />
+        ))}
+      </Instances>
+      <Instances limit={STREET_TREES.length}>
+        <icosahedronGeometry args={[1.45, 1]} />
+        <meshStandardMaterial color="#476850" roughness={0.96} />
+        {STREET_TREES.map((tree) => (
+          <Instance
+            key={tree.key}
+            position={[tree.position[0], 4.15, tree.position[2]]}
+            scale={[1, 1.22, 1]}
+          />
+        ))}
+      </Instances>
+
+      <Instances limit={STREET_LIGHTS.length}>
+        <cylinderGeometry args={[0.07, 0.11, 5.4, 8]} />
+        <meshStandardMaterial color="#4d5558" metalness={0.72} roughness={0.4} />
+        {STREET_LIGHTS.map((light) => (
+          <Instance
+            key={light.key}
+            position={[light.position[0] + 3, 2.7, light.position[2] + 7]}
+          />
+        ))}
+      </Instances>
+      <Instances limit={STREET_LIGHTS.length}>
+        <sphereGeometry args={[0.18, 8, 8]} />
+        <meshStandardMaterial
+          color="#e8dec6"
+          emissive="#d8c9a5"
+          emissiveIntensity={0.35}
+          roughness={0.46}
+        />
+        {STREET_LIGHTS.map((light) => (
+          <Instance
+            key={light.key}
+            position={[light.position[0] + 3, 5.42, light.position[2] + 7]}
+          />
+        ))}
+      </Instances>
+    </group>
   );
 }
 
@@ -113,6 +333,7 @@ function Surroundings({ quality }: { quality: SceneQuality }) {
       </mesh>
 
       <UrbanFabric quality={quality} />
+      {quality === "high" ? <UrbanDetails /> : null}
 
       {[-57, -61].map((z) => (
         <mesh key={z} receiveShadow position={[0, 0.12, z]}>
@@ -289,25 +510,25 @@ function StadiumAtmosphere({ quality }: { quality: SceneQuality }) {
           toneMapped={false}
         >
           <GradientTexture
-            colors={["#e2e9eb", "#83a9ca", "#285f9b"]}
+            colors={["#dce3df", "#91acb9", "#3f6681"]}
             size={512}
             stops={[0, 0.5, 1]}
           />
         </meshBasicMaterial>
       </mesh>
       {quality === "high" ? (
-        <Environment environmentIntensity={0.48} frames={1} resolution={128}>
+        <Environment environmentIntensity={0.34} frames={1} resolution={128}>
           <Lightformer
-            color="#fff0cf"
+            color="#fff8ea"
             form="rect"
-            intensity={2.1}
+            intensity={1.35}
             position={[-90, 95, 70]}
             scale={[95, 42]}
           />
           <Lightformer
-            color="#78a7d4"
+            color="#9db7ca"
             form="ring"
-            intensity={0.7}
+            intensity={0.45}
             position={[45, 38, -125]}
             scale={72}
           />
@@ -326,17 +547,17 @@ export function BomboneraScene({
 }: BomboneraSceneProps) {
   return (
     <>
-      <color attach="background" args={["#9bb8d2"]} />
-      <fog attach="fog" args={["#afc5d7", 210, 420]} />
+      <color attach="background" args={["#9dafba"]} />
+      <fog attach="fog" args={["#b7c2c7", 210, 420]} />
 
       <StadiumAtmosphere quality={quality} />
 
-      <ambientLight intensity={0.24} />
-      <hemisphereLight args={["#d7ebff", "#665b48", 0.78]} />
+      <ambientLight intensity={0.17} />
+      <hemisphereLight args={["#dceaf0", "#6c6c63", 0.68]} />
       <directionalLight
         castShadow={quality === "high"}
-        color="#fff0c4"
-        intensity={3.2}
+        color="#fff8e8"
+        intensity={2.25}
         position={[120, 140, 170]}
         shadow-bias={-0.00008}
         shadow-camera-bottom={-125}

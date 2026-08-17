@@ -5,7 +5,7 @@
   "source_vertices": 1177209,
   "source_triangles": 840301,
   "source_materials": 175,
-  "linked_materials": 136,
+  "linked_materials": 135,
   "linked_textures": [
     "12323_pl.png",
     "12EST.png",
@@ -46,6 +46,7 @@
     "_142",
     "_20",
     "_94",
+    "_Claddin",
     "_Color03",
     "_Color_H",
     "_Steel01",
@@ -79,11 +80,152 @@
     "White_Sq",
     "Wood_Flo"
   ],
-  "raw_glb_bytes": 79376572,
-  "seconds": 176.96,
+  "material_profiles": {
+    "muted_gold_bands": {
+      "count": 2,
+      "materials": [
+        "_126",
+        "_Cladd07"
+      ],
+      "base_color": [
+        0.7,
+        0.5,
+        0.1,
+        1.0
+      ],
+      "metallic": 0.0,
+      "roughness": 0.66,
+      "saturation": null,
+      "value": null,
+      "texture_tint": [
+        0.78,
+        0.66,
+        0.34,
+        1.0
+      ]
+    },
+    "weathered_metal": {
+      "count": 21,
+      "materials": [
+        "_Aluds",
+        "_Metal01",
+        "_Metal02",
+        "_Metal03",
+        "_Metal04",
+        "_Metal_A",
+        "_Metal_C",
+        "_Metal_R",
+        "_Steel01",
+        "_Steel02",
+        "_Steel_B",
+        "l_de_ace",
+        "Metal_01",
+        "Metal_Co",
+        "Metal_Em",
+        "Metal_en",
+        "Metal_Ro",
+        "Metal_Si",
+        "Metal_St",
+        "Roofing_",
+        "Steel_Br"
+      ],
+      "base_color": [
+        0.31,
+        0.33,
+        0.34,
+        1.0
+      ],
+      "metallic": 0.72,
+      "roughness": 0.42,
+      "saturation": 0.72,
+      "value": 0.82,
+      "texture_tint": null
+    },
+    "boca_blue_cladding": {
+      "count": 1,
+      "materials": [
+        "_Claddin"
+      ],
+      "base_color": [
+        0.012,
+        0.2,
+        0.48,
+        1.0
+      ],
+      "metallic": 0.0,
+      "roughness": 0.74,
+      "saturation": null,
+      "value": null,
+      "texture_tint": null
+    },
+    "concrete": {
+      "count": 1,
+      "materials": [
+        "_Color_H"
+      ],
+      "base_color": [
+        0.43,
+        0.45,
+        0.45,
+        1.0
+      ],
+      "metallic": 0.0,
+      "roughness": 0.9,
+      "saturation": null,
+      "value": null,
+      "texture_tint": null
+    },
+    "painted_seats": {
+      "count": 1,
+      "materials": [
+        "butaca11"
+      ],
+      "base_color": [
+        0.72,
+        0.52,
+        0.11,
+        1.0
+      ],
+      "metallic": 0.0,
+      "roughness": 0.6,
+      "saturation": null,
+      "value": null,
+      "texture_tint": [
+        0.82,
+        0.7,
+        0.38,
+        1.0
+      ]
+    },
+    "natural_grass": {
+      "count": 2,
+      "materials": [
+        "cancha_d",
+        "Grass_Da"
+      ],
+      "base_color": [
+        0.18,
+        0.34,
+        0.19,
+        1.0
+      ],
+      "metallic": 0.0,
+      "roughness": 0.92,
+      "saturation": 0.64,
+      "value": 0.78,
+      "texture_tint": null
+    }
+  },
+  "material_profile_count": 28,
+  "removed_texture_aliases": {
+    "_Claddin": "_Cladd07"
+  },
+  "raw_glb_bytes": 79870472,
+  "seconds": 203.74,
   "author": "A1905 (@al1905)",
   "license": "CC BY 4.0",
   "source_url": "https://sketchfab.com/3d-models/la-bombonera-boca-juniors-82204c5963b84ac593c26127ac36fbfa",
+  "archive_license_file": false,
   "optimized": true,
   "pitch_source_bounds": {
     "min": [
@@ -117,16 +259,15 @@
     -41.824554443359375,
     -36.860496520996094
   ],
-  "bytes": 11268872,
+  "bytes": 11118792,
   "compression": "meshopt",
   "texture_compression": "webp",
   "texture_max_size": 1024,
   "simplify_ratio": 0.35,
-  "optimized_meshes": 33,
-  "draw_calls": 33,
-  "optimized_triangles": 685899,
-  "archive_license_file": false,
   "simplify_error": 0.003,
+  "optimized_meshes": 38,
+  "draw_calls": 38,
+  "optimized_triangles": 684698,
   "optimized_bbox_min": [
     -127.98697,
     -4.68799,
@@ -136,6 +277,5 @@
     135.47567,
     56.8378,
     95.92328
-  ],
-  "orientation_hierarchy_fixed": true
+  ]
 }

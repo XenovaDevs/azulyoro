@@ -5,6 +5,7 @@ The stadium asset is adapted from [La Bombonera - Boca Juniors](https://sketchfa
 Modifications made for this site:
 
 - Re-linked the texture subset included in the downloaded archive.
+- Balanced PBR material colors, roughness, and metallic response for web rendering.
 - Centered the model on the playing field and converted axes for Three.js.
 - Simplified and compressed geometry with Meshopt.
 - Resized and converted embedded textures to WebP.

@@ -153,7 +153,7 @@ export default function BomboneraExperience() {
       onKeyDown={handleKeyDown}
     >
       <Canvas
-        camera={{ fov: 48, far: 900, near: 0.1, position: [142, 66, 132] }}
+        camera={{ fov: 48, far: 900, near: 0.1, position: [150, 68, 122] }}
         dpr={quality === "high" ? [1, 1.75] : 1}
         fallback={
           <WebGlFallback message={t("webglUnavailable")} />
@@ -165,7 +165,7 @@ export default function BomboneraExperience() {
         shadows={quality === "high"}
         onCreated={({ gl }) => {
           gl.outputColorSpace = "srgb";
-          gl.toneMappingExposure = 1.05;
+          gl.toneMappingExposure = 0.94;
         }}
       >
         <Suspense fallback={null}>

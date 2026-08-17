@@ -12,6 +12,7 @@ import argparse
 import json
 import math
 import os
+import re
 import sys
 import time
 from pathlib import Path
@@ -42,7 +43,6 @@ TEXTURE_ALIASES = {
     "_cladd04": "_Cladd06",
     "_cladd05": "_Cladd06",
     "_cladd08": "_Cladd07",
-    "_claddin": "_Cladd07",
     "_metal02": "_Metal01",
     "_metal03": "_Metal01",
     "_metal04": "_Metal01",
@@ -55,6 +55,51 @@ TEXTURE_ALIASES = {
     "_color_a": "Color_A0",
     "_color01": "Color_A0",
     "_color02": "Color_A0",
+}
+
+MATERIAL_PROFILES = {
+    "boca_blue_cladding": {
+        "exact": {"_claddin"},
+        "base_color": [0.012, 0.20, 0.48, 1.0],
+        "metallic": 0.0,
+        "roughness": 0.74,
+    },
+    "muted_gold_bands": {
+        "exact": {"_cladd07", "_126"},
+        "base_color": [0.70, 0.50, 0.10, 1.0],
+        "texture_tint": [0.78, 0.66, 0.34, 1.0],
+        "metallic": 0.0,
+        "roughness": 0.66,
+    },
+    "concrete": {
+        "exact": {"_color_h"},
+        "base_color": [0.43, 0.45, 0.45, 1.0],
+        "metallic": 0.0,
+        "roughness": 0.9,
+    },
+    "painted_seats": {
+        "contains": {"butaca"},
+        "base_color": [0.72, 0.52, 0.11, 1.0],
+        "texture_tint": [0.82, 0.70, 0.38, 1.0],
+        "metallic": 0.0,
+        "roughness": 0.6,
+    },
+    "natural_grass": {
+        "prefixes": {"grass_", "cancha_"},
+        "base_color": [0.18, 0.34, 0.19, 1.0],
+        "saturation": 0.64,
+        "value": 0.78,
+        "metallic": 0.0,
+        "roughness": 0.92,
+    },
+    "weathered_metal": {
+        "contains": {"metal", "steel", "roof", "alud", "ace"},
+        "base_color": [0.31, 0.33, 0.34, 1.0],
+        "saturation": 0.72,
+        "value": 0.82,
+        "metallic": 0.72,
+        "roughness": 0.42,
+    },
 }
 
 
@@ -113,7 +158,69 @@ def texture_for_material(
     return textures.get(alias.lower()) if alias else None
 
 
-def attach_textures(texture_directory: Path) -> tuple[list[dict[str, str]], list[str]]:
+def normalized_material_name(name: str) -> str:
+    return re.sub(r"\.\d{3}$", "", name).lower()
+
+
+def profile_for_material(material_name: str) -> tuple[str, dict[str, object]] | None:
+    key = normalized_material_name(material_name)
+    for profile_name, profile in MATERIAL_PROFILES.items():
+        if key in profile.get("exact", set()):
+            return profile_name, profile
+        if any(key.startswith(prefix) for prefix in profile.get("prefixes", set())):
+            return profile_name, profile
+        if any(token in key for token in profile.get("contains", set())):
+            return profile_name, profile
+    return None
+
+
+def apply_material_profile(
+    material: bpy.types.Material,
+    principled: bpy.types.Node,
+    image_node: bpy.types.Node | None,
+    profile: dict[str, object],
+) -> None:
+    base_color = profile.get("base_color")
+    if base_color is not None:
+        principled.inputs["Base Color"].default_value = base_color
+        material.diffuse_color = base_color
+    principled.inputs["Metallic"].default_value = profile["metallic"]
+    principled.inputs["Roughness"].default_value = profile["roughness"]
+
+    if image_node is None:
+        return
+
+    nodes = material.node_tree.nodes
+    links = material.node_tree.links
+    color_output = image_node.outputs["Color"]
+    saturation = profile.get("saturation")
+    value = profile.get("value")
+    if saturation is not None or value is not None:
+        hsv = nodes.new("ShaderNodeHueSaturation")
+        hsv.name = "PROFILE_COLOR_BALANCE"
+        hsv.label = "Material profile color balance"
+        hsv.inputs["Saturation"].default_value = saturation or 1.0
+        hsv.inputs["Value"].default_value = value or 1.0
+        links.new(color_output, hsv.inputs["Color"])
+        color_output = hsv.outputs["Color"]
+
+    texture_tint = profile.get("texture_tint")
+    if texture_tint is not None:
+        tint = nodes.new("ShaderNodeMixRGB")
+        tint.name = "PROFILE_TEXTURE_TINT"
+        tint.label = "Material profile texture tint"
+        tint.blend_type = "MULTIPLY"
+        tint.inputs[0].default_value = 1.0
+        tint.inputs[2].default_value = texture_tint
+        links.new(color_output, tint.inputs[1])
+        color_output = tint.outputs["Color"]
+
+    links.new(color_output, principled.inputs["Base Color"])
+
+
+def attach_textures(
+    texture_directory: Path,
+) -> tuple[list[dict[str, str]], list[str], dict[str, dict[str, object]]]:
     textures = {
         path.stem.lower(): path
         for path in texture_directory.iterdir()
@@ -121,32 +228,61 @@ def attach_textures(texture_directory: Path) -> tuple[list[dict[str, str]], list
     }
     linked: list[dict[str, str]] = []
     missing: list[str] = []
+    profile_summary: dict[str, dict[str, object]] = {}
 
     for material in bpy.data.materials:
-        texture_path = texture_for_material(material.name, textures)
-        if texture_path is None:
-            missing.append(material.name)
-            continue
         material.use_nodes = True
         principled = material.node_tree.nodes.get("Principled BSDF")
         if principled is None:
             missing.append(material.name)
             continue
-        image = bpy.data.images.load(str(texture_path), check_existing=True)
-        image_node = material.node_tree.nodes.new("ShaderNodeTexImage")
-        image_node.image = image
-        image_node.label = texture_path.name
-        image_node.name = f"TEX_{texture_path.stem}"
-        material.node_tree.links.new(image_node.outputs["Color"], principled.inputs["Base Color"])
 
-        if texture_path.stem.lower() in TRANSPARENT_TEXTURES:
-            material.node_tree.links.new(image_node.outputs["Alpha"], principled.inputs["Alpha"])
-            material.surface_render_method = "DITHERED"
-            material.use_transparency_overlap = False
-            material.use_backface_culling = False
+        texture_path = texture_for_material(material.name, textures)
+        image_node = None
+        if texture_path is None:
+            missing.append(material.name)
+        else:
+            image = bpy.data.images.load(str(texture_path), check_existing=True)
+            image_node = material.node_tree.nodes.new("ShaderNodeTexImage")
+            image_node.image = image
+            image_node.label = texture_path.name
+            image_node.name = f"TEX_{texture_path.stem}"
+            material.node_tree.links.new(
+                image_node.outputs["Color"], principled.inputs["Base Color"]
+            )
 
-        linked.append({"material": material.name, "texture": texture_path.name})
-    return linked, missing
+            if texture_path.stem.lower() in TRANSPARENT_TEXTURES:
+                material.node_tree.links.new(
+                    image_node.outputs["Alpha"], principled.inputs["Alpha"]
+                )
+                material.surface_render_method = "DITHERED"
+                material.use_transparency_overlap = False
+                material.use_backface_culling = False
+
+            linked.append({"material": material.name, "texture": texture_path.name})
+
+        matched_profile = profile_for_material(material.name)
+        if matched_profile is None:
+            continue
+        profile_name, profile = matched_profile
+        apply_material_profile(material, principled, image_node, profile)
+        entry = profile_summary.setdefault(
+            profile_name,
+            {
+                "count": 0,
+                "materials": [],
+                "base_color": profile.get("base_color"),
+                "metallic": profile["metallic"],
+                "roughness": profile["roughness"],
+                "saturation": profile.get("saturation"),
+                "value": profile.get("value"),
+                "texture_tint": profile.get("texture_tint"),
+            },
+        )
+        entry["count"] += 1
+        entry["materials"].append(material.name)
+
+    return linked, missing, profile_summary
 
 
 def orient_to_web_space() -> dict[str, object]:
@@ -238,7 +374,7 @@ def main() -> None:
         obj.data.calc_loop_triangles()
     source_triangles = sum(len(obj.data.loop_triangles) for obj in mesh_objects)
     source_vertices = sum(len(obj.data.vertices) for obj in mesh_objects)
-    linked, missing = attach_textures(texture_directory)
+    linked, missing, material_profiles = attach_textures(texture_directory)
     orientation = orient_to_web_space()
 
     scene = bpy.context.scene
@@ -246,7 +382,10 @@ def main() -> None:
     scene["author"] = AUTHOR
     scene["license"] = LICENSE
     scene["license_url"] = LICENSE_URL
-    scene["modified"] = "Centered on pitch, rotated to web axes, materials relinked"
+    scene["modified"] = (
+        "Centered on pitch, rotated to web axes, textures relinked, "
+        "and material profiles balanced for web rendering"
+    )
 
     export_glb(output)
     report = {
@@ -259,6 +398,11 @@ def main() -> None:
         "linked_materials": len(linked),
         "linked_textures": sorted({item["texture"] for item in linked}),
         "missing_texture_materials": missing,
+        "material_profiles": material_profiles,
+        "material_profile_count": sum(
+            profile["count"] for profile in material_profiles.values()
+        ),
+        "removed_texture_aliases": {"_Claddin": "_Cladd07"},
         "raw_glb_bytes": output.stat().st_size,
         "seconds": round(time.time() - started, 2),
         "author": AUTHOR,
