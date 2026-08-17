@@ -195,20 +195,16 @@ const STREET_LIGHTS = STREET_TREES.filter((_, index) => index % 2 === 0);
 
 function UrbanFabric({ quality }: { quality: SceneQuality }) {
   const geometry = useMemo(
-    () => {
-      const buildings =
-        quality === "high" ? CONTEXT_BUILDINGS : CONTEXT_BUILDINGS.slice(0, 52);
-      return {
-        roofs: quality === "high" ? createRoofGeometry(buildings) : null,
-        walls: createContextGeometry(buildings),
-      };
-    },
-    [quality],
+    () => ({
+      roofs: createRoofGeometry(CONTEXT_BUILDINGS),
+      walls: createContextGeometry(CONTEXT_BUILDINGS),
+    }),
+    [],
   );
 
   useEffect(
     () => () => {
-      geometry.roofs?.dispose();
+      geometry.roofs.dispose();
       geometry.walls.dispose();
     },
     [geometry],
@@ -223,11 +219,9 @@ function UrbanFabric({ quality }: { quality: SceneQuality }) {
       >
         <meshStandardMaterial vertexColors roughness={0.94} />
       </mesh>
-      {geometry.roofs ? (
-        <mesh geometry={geometry.roofs} receiveShadow>
-          <meshStandardMaterial vertexColors roughness={0.88} />
-        </mesh>
-      ) : null}
+      <mesh geometry={geometry.roofs} receiveShadow>
+        <meshStandardMaterial vertexColors roughness={0.88} />
+      </mesh>
     </group>
   );
 }
@@ -333,7 +327,7 @@ function Surroundings({ quality }: { quality: SceneQuality }) {
       </mesh>
 
       <UrbanFabric quality={quality} />
-      {quality === "high" ? <UrbanDetails /> : null}
+      <UrbanDetails />
 
       {[-57, -61].map((z) => (
         <mesh key={z} receiveShadow position={[0, 0.12, z]}>
