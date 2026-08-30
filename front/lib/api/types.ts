@@ -114,6 +114,9 @@ export interface StandingDto {
   rank: number;
   teamId: string;
   teamName: string | null;
+  teamLogoUrl?: string | null;
+  competitionId?: string;
+  competitionName?: string | null;
   points: number;
   played: number;
   win: number;

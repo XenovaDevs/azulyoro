@@ -1,7 +1,8 @@
 import type { MatchDto } from "@/lib/api/types";
 import type { MatchGroup } from "@/components/sports/FixtureList";
+import { ARGENTINA_TIMEZONE, formatDateInZone } from "./dateUtils";
 
-/** Groups matches by local day (label from toLocaleDateString), preserving the
+/** Groups matches by local day in Argentina timezone, preserving the
  * given order across groups. `direction` controls day ordering. */
 export function groupByDay(
   matches: MatchDto[],
@@ -11,18 +12,14 @@ export function groupByDay(
   const buckets = new Map<string, { ts: number; matches: MatchDto[] }>();
   for (const m of matches) {
     const d = new Date(m.dateUtc);
-    const key = d.toLocaleDateString(locale, {
+    const key = formatDateInZone(d, locale, ARGENTINA_TIMEZONE, {
       weekday: "long",
       day: "numeric",
       month: "long",
       year: "numeric",
     });
-    const dayStart = new Date(
-      d.getFullYear(),
-      d.getMonth(),
-      d.getDate(),
-    ).getTime();
-    const bucket = buckets.get(key) ?? { ts: dayStart, matches: [] };
+    const ts = d.getTime();
+    const bucket = buckets.get(key) ?? { ts, matches: [] };
     bucket.matches.push(m);
     buckets.set(key, bucket);
   }

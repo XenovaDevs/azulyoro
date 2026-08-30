@@ -4,6 +4,7 @@ import { classifyStatus } from "@/lib/matchStatus";
 import { matchSlug } from "@/lib/slug";
 import { Link } from "@/i18n/navigation";
 import { LiveScoreBadge } from "./LiveScoreBadge";
+import { MatchKickoffTime } from "./MatchKickoffTime";
 
 function TeamRow({
   name,
@@ -61,10 +62,6 @@ export async function MatchCard({
   const t = await getTranslations("Matches");
   const state = classifyStatus(match.status);
   const showScore = state !== "scheduled";
-  const kickoff = new Date(match.dateUtc).toLocaleString(locale, {
-    dateStyle: "medium",
-    timeStyle: "short",
-  });
 
   const card = (
     <article
@@ -102,9 +99,9 @@ export async function MatchCard({
         />
       </div>
 
-      <p className="mt-3 text-xs text-[var(--muted-foreground)]">
-        <time dateTime={match.dateUtc}>{kickoff}</time>
-      </p>
+      <div className="mt-3 text-xs text-[var(--muted-foreground)]">
+        <MatchKickoffTime dateUtc={match.dateUtc} locale={locale} variant="short" />
+      </div>
     </article>
   );
 

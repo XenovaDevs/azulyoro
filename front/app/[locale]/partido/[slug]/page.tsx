@@ -15,6 +15,9 @@ import { siteUrl } from "@/lib/site";
 import { LiveMatchStream } from "@/components/sports/LiveMatchStream";
 import { Breadcrumbs } from "@/components/sports/Breadcrumbs";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { MatchKickoffTime } from "@/components/sports/MatchKickoffTime";
+import { MatchEventsList } from "@/components/sports/MatchEventsList";
+import { MatchLineupsView } from "@/components/sports/MatchLineupsView";
 import type { MatchDto } from "@/lib/api/types";
 
 export const revalidate = 30;
@@ -91,20 +94,6 @@ export default async function MatchDetailPage({
     played ? getMatchLineups(match.id) : Promise.resolve([]),
     played ? getMatchPlayerStats(match.id) : Promise.resolve([]),
   ]);
-
-  // Names now come from the API. Fall back to the match's team names by id
-  // when the per-row team name is absent.
-  const teamNameById = (id: string | null) =>
-    id === match.homeTeamId
-      ? match.homeTeamName
-      : id === match.awayTeamId
-        ? match.awayTeamName
-        : null;
-
-  const kickoff = new Date(match.dateUtc).toLocaleString(locale, {
-    dateStyle: "full",
-    timeStyle: "short",
-  });
 
   const jsonLd = {
     "@context": "https://schema.org",
@@ -188,70 +177,48 @@ export default async function MatchDetailPage({
           </div>
         </div>
 
-        <p className="mt-6 text-center text-sm text-[var(--muted-foreground)]">
-          <time dateTime={match.dateUtc}>{kickoff}</time>
-          {detail?.venue ? ` · ${detail.venue}` : ""}
-          {detail?.round ? ` · ${detail.round}` : ""}
-        </p>
+        <div className="mt-6 flex flex-wrap items-center justify-center gap-1 text-center text-sm text-[var(--muted-foreground)]">
+          <MatchKickoffTime
+            dateUtc={match.dateUtc}
+            locale={locale}
+            variant="full"
+            showTimezoneBadge
+          />
+          {detail?.venue ? <span>· {detail.venue}</span> : null}
+          {detail?.round ? <span>· {detail.round}</span> : null}
+        </div>
       </section>
 
-      {/* Events */}
-      {state === "finished" && played && (
+      {/* Lineups (Tactical Pitch & Substitutes) */}
+      {lineups.length > 0 && (
         <section>
-          <h2 className="mb-3 font-display text-lg font-semibold">{t("events")}</h2>
-          {events.length > 0 ? (
-            <ol className="flex flex-col gap-2">
-              {events.map((e, i) => (
-                <li
-                  key={i}
-                  className="flex items-baseline gap-3 rounded-md border border-[var(--border)] px-3 py-2 text-sm"
-                >
-                  <span className="w-10 tabular-nums font-semibold text-[var(--accent)]">
-                    {e.minute}
-                    {e.extraMinute ? `+${e.extraMinute}` : ""}&apos;
-                  </span>
-                  <span className="font-medium">{e.type}</span>
-                  <span className="text-[var(--muted-foreground)]">
-                    {e.playerName ?? ""}
-                    {e.assistName ? ` (${e.assistName})` : ""}
-                    {e.detail ? ` · ${e.detail}` : ""}
-                  </span>
-                  <span className="ml-auto text-xs text-[var(--muted-foreground)]">
-                    {e.teamName ?? teamNameById(e.teamId)}
-                  </span>
-                </li>
-              ))}
-            </ol>
-          ) : (
-            <EmptyState title={t("eventsEmpty")} />
-          )}
+          <h2 className="mb-4 font-display text-xl font-bold">{t("lineups")}</h2>
+          <MatchLineupsView
+            lineups={lineups}
+            events={events}
+            locale={locale}
+            homeTeamId={match.homeTeamId}
+            awayTeamId={match.awayTeamId}
+          />
         </section>
       )}
 
-      {/* Lineups */}
-      {lineups.length > 0 && (
+      {/* Events */}
+      {played && (
         <section>
-          <h2 className="mb-3 font-display text-lg font-semibold">{t("lineups")}</h2>
-          <div className="grid gap-4 sm:grid-cols-2">
-            {lineups.map((lu) => (
-              <div key={lu.teamId} className="rounded-lg border border-[var(--border)] p-4">
-                <div className="mb-2 flex items-center justify-between">
-                  <span className="font-semibold">{lu.teamName ?? teamNameById(lu.teamId)}</span>
-                  <span className="text-xs text-[var(--muted-foreground)]">{lu.formation}</span>
-                </div>
-                <ul className="flex flex-col gap-1 text-sm">
-                  {lu.players.map((p) => (
-                    <li key={p.playerId} className="flex gap-2">
-                      <span className="w-6 tabular-nums text-[var(--muted-foreground)]">
-                        {p.number ?? "–"}
-                      </span>
-                      <span>{p.playerName ?? "—"}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ))}
-          </div>
+          <h2 className="mb-4 font-display text-xl font-bold">{t("events")}</h2>
+          {events.length > 0 ? (
+            <MatchEventsList
+              events={events}
+              locale={locale}
+              homeTeamId={match.homeTeamId}
+              awayTeamId={match.awayTeamId}
+              homeTeamName={match.homeTeamName}
+              awayTeamName={match.awayTeamName}
+            />
+          ) : (
+            <EmptyState title={t("eventsEmpty")} />
+          )}
         </section>
       )}
 
