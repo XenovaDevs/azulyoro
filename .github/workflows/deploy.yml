@@ -1,6 +1,9 @@
 name: Deploy production
 
 on:
+  push:
+    branches:
+      - main
   workflow_dispatch:
 
 concurrency:
@@ -12,9 +15,30 @@ permissions:
 
 jobs:
   deploy:
+    name: Trigger VPS deployment
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
-      - name: Explain server-side deploy
+      - name: Configure restricted SSH access
+        env:
+          DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          DEPLOY_KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
         run: |
-          echo "Production deploy is performed by the VPS timer azulyoro-autodeploy.timer."
-          echo "This manual workflow does not require SSH secrets and does not deploy directly."
+          install -d -m 0700 "$HOME/.ssh"
+          printf '%s\n' "$DEPLOY_SSH_KEY" > "$HOME/.ssh/azulyoro_deploy"
+          printf '%s\n' "$DEPLOY_KNOWN_HOSTS" > "$HOME/.ssh/known_hosts"
+          chmod 0600 "$HOME/.ssh/azulyoro_deploy" "$HOME/.ssh/known_hosts"
+
+      - name: Deploy current main on the VPS
+        env:
+          DEPLOY_HOST: ${{ vars.DEPLOY_HOST }}
+          DEPLOY_PORT: ${{ vars.DEPLOY_PORT }}
+          DEPLOY_USER: ${{ vars.DEPLOY_USER }}
+        run: |
+          ssh \
+            -i "$HOME/.ssh/azulyoro_deploy" \
+            -p "$DEPLOY_PORT" \
+            -o BatchMode=yes \
+            -o IdentitiesOnly=yes \
+            -o StrictHostKeyChecking=yes \
+            "$DEPLOY_USER@$DEPLOY_HOST" deploy

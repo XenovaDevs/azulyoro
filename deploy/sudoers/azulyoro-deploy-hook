@@ -1,0 +1,1 @@
+azulyoro-deploy-hook ALL=(root) NOPASSWD: /usr/bin/systemctl start --wait azulyoro-autodeploy.service

@@ -118,10 +118,11 @@ sudo /usr/local/sbin/azulyoro-deploy
 ```
 
 El autodeploy corre dentro del VPS, igual que los otros servicios que usan
-este servidor. Consulta `origin/main` cada dos minutos, sólo acepta avances
-fast-forward y se niega a desplegar si el checkout tiene cambios locales.
-El deploy existente mantiene el lock, las migraciones, el health check y el
-rollback atómico.
+este servidor. GitHub Actions lo dispara inmediatamente después de cada push
+a `main`. El timer también consulta `origin/main` cada dos minutos como
+respaldo, sólo acepta avances fast-forward y se niega a desplegar si el
+checkout tiene cambios locales. El deploy existente mantiene el lock, las
+migraciones, el health check y el rollback atómico.
 
 Instalarlo una sola vez:
 
@@ -136,10 +137,45 @@ sudo systemctl daemon-reload
 sudo systemctl enable --now azulyoro-autodeploy.timer
 ```
 
-No se necesitan secrets SSH de GitHub: el servidor usa el acceso de lectura
-del checkout para consultar el repositorio y ejecuta localmente el deploy
-privilegiado. El workflow queda sólo como referencia manual y no realiza el
-deploy directamente. Revisar actividad con:
+Para el disparo inmediato se usa un usuario SSH sin acceso interactivo. Su
+única clave tiene `restrict` y un forced command que sólo puede arrancar y
+esperar a `azulyoro-autodeploy.service`. El usuario sólo recibe permiso sudo
+para ese comando exacto de systemd; no tiene acceso root general.
+
+Instalar el wrapper y el sudoers rule:
+
+```bash
+sudo install -o root -g root -m 0755 deploy/scripts/azulyoro-ci-deploy.sh \
+  /usr/local/sbin/azulyoro-ci-deploy
+sudo install -o root -g root -m 0440 deploy/sudoers/azulyoro-deploy-hook \
+  /etc/sudoers.d/azulyoro-deploy-hook
+sudo visudo -cf /etc/sudoers.d/azulyoro-deploy-hook
+sudo install -o root -g root -m 0644 deploy/ssh/azulyoro-deploy-hook.conf \
+  /etc/ssh/sshd_config.d/azulyoro-deploy-hook.conf
+sudo sshd -t
+sudo systemctl reload ssh.service
+```
+
+El bloque `Match User` permite autenticación sólo por clave para este usuario
+automatizado, incluso si la política global exige clave y contraseña. También
+desactiva contraseña, teclado interactivo, TTY, X11 y TCP forwarding sólo para
+esta cuenta; no cambia la autenticación de los demás usuarios del VPS.
+
+El workflow requiere estas variables de Actions:
+
+- `DEPLOY_HOST`: IP pública del VPS.
+- `DEPLOY_PORT`: puerto SSH.
+- `DEPLOY_USER`: `azulyoro-deploy-hook`.
+
+Y estos secrets:
+
+- `DEPLOY_SSH_KEY`: clave privada exclusiva para este repositorio.
+- `DEPLOY_KNOWN_HOSTS`: host key Ed25519 del VPS, fijada previamente para
+  impedir conexiones a un servidor suplantado.
+
+El servidor sigue usando su propio acceso de sólo lectura al repositorio. La
+clave de Actions no puede elegir comandos ni editar el checkout: únicamente
+despierta el deploy local ya protegido. Revisar actividad con:
 
 ```bash
 sudo systemctl status azulyoro-autodeploy.timer --no-pager
