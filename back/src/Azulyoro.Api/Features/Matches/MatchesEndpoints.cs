@@ -25,8 +25,18 @@ public static class MatchesEndpoints
         group.MapGet("/{id:guid}/events", GetEvents);
         group.MapGet("/{id:guid}/lineups", GetLineups);
         group.MapGet("/{id:guid}/player-stats", GetPlayerStats);
+        group.MapPost("/backfill", BackfillMatches);
 
         return app;
+    }
+
+    private static async Task<IResult> BackfillMatches(
+        IFixtureDetailSyncService detailSync,
+        CancellationToken ct,
+        int max = 50)
+    {
+        await detailSync.BackfillFinishedAsync(max, ct);
+        return Results.Ok(new { message = $"Backfill for up to {max} fixtures completed." });
     }
 
     private static async Task<IResult> GetMatches(

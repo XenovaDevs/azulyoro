@@ -133,27 +133,37 @@ public sealed class FixtureDetailSyncService(
     private async Task<Dictionary<int, Guid>> EnsurePlayersAsync(
         ApiFixtureItem item, CancellationToken ct)
     {
-        var referenced = new Dictionary<int, string?>();
+        var referenced = new Dictionary<int, (string? Name, int? Number, string? Photo)>();
 
-        void Note(int? id, string? name)
+        void Note(int? id, string? name, int? number = null, string? photo = null)
         {
-            if (id is > 0 && !referenced.ContainsKey(id.Value))
+            if (id is > 0)
             {
-                referenced[id.Value] = name;
+                if (!referenced.TryGetValue(id.Value, out var prev))
+                {
+                    referenced[id.Value] = (name, number, photo);
+                }
+                else
+                {
+                    referenced[id.Value] = (
+                        name ?? prev.Name,
+                        number ?? prev.Number,
+                        photo ?? prev.Photo);
+                }
             }
         }
 
         foreach (var ev in item.Events)
         {
-            Note(ev.Player.Id, ev.Player.Name);
-            Note(ev.Assist.Id, ev.Assist.Name);
+            Note(ev.Player.Id, ev.Player.Name, photo: ev.Player.Photo);
+            Note(ev.Assist.Id, ev.Assist.Name, photo: ev.Assist.Photo);
         }
 
         foreach (var lineup in item.Lineups)
         {
             foreach (var slot in lineup.StartXI.Concat(lineup.Substitutes))
             {
-                Note(slot.Player.Id, slot.Player.Name);
+                Note(slot.Player.Id, slot.Player.Name, slot.Player.Number, slot.Player.Photo);
             }
         }
 
@@ -161,7 +171,7 @@ public sealed class FixtureDetailSyncService(
         {
             foreach (var entry in teamPlayers.Players)
             {
-                Note(entry.Player.Id, entry.Player.Name);
+                Note(entry.Player.Id, entry.Player.Name, photo: entry.Player.Photo);
             }
         }
 
@@ -171,10 +181,29 @@ public sealed class FixtureDetailSyncService(
             .ToListAsync(ct);
         var byExt = existing.ToDictionary(p => p.ExtId, p => p.Id);
 
-        foreach (var (extId, name) in referenced)
+        foreach (var (extId, (name, number, photo)) in referenced)
         {
-            if (byExt.ContainsKey(extId))
+            var fallbackPhoto = photo ?? $"https://media.api-sports.io/football/players/{extId}.png";
+
+            if (byExt.TryGetValue(extId, out var existingId))
             {
+                var existingPlayer = existing.FirstOrDefault(p => p.Id == existingId);
+                if (existingPlayer != null)
+                {
+                    if (!string.IsNullOrWhiteSpace(name) &&
+                        (string.IsNullOrWhiteSpace(existingPlayer.Name) || existingPlayer.Name.StartsWith("#", StringComparison.Ordinal)))
+                    {
+                        existingPlayer.Name = name;
+                    }
+                    if (existingPlayer.Number == null && number != null)
+                    {
+                        existingPlayer.Number = number;
+                    }
+                    if (string.IsNullOrWhiteSpace(existingPlayer.PhotoUrl))
+                    {
+                        existingPlayer.PhotoUrl = fallbackPhoto;
+                    }
+                }
                 continue;
             }
 
@@ -182,6 +211,8 @@ public sealed class FixtureDetailSyncService(
             {
                 ExtId = extId,
                 Name = name ?? $"#{extId}",
+                Number = number,
+                PhotoUrl = fallbackPhoto,
                 IsActive = false,
             };
             db.Players.Add(player);

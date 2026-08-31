@@ -88,6 +88,9 @@ public class ApiEventRef
 
     [JsonPropertyName("name")]
     public string? Name { get; set; }
+
+    [JsonPropertyName("photo")]
+    public string? Photo { get; set; }
 }
 
 // ── Lineups ─────────────────────────────────────────────────────────────────
@@ -138,6 +141,9 @@ public class ApiLineupPlayer
 
     [JsonPropertyName("grid")]
     public string? Grid { get; set; }
+
+    [JsonPropertyName("photo")]
+    public string? Photo { get; set; }
 }
 
 // ── Per-fixture player statistics ───────────────────────────────────────────
