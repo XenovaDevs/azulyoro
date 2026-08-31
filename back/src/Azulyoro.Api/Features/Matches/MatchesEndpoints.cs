@@ -320,13 +320,76 @@ public static class MatchesEndpoints
         return Results.Ok(match);
     }
 
-    private static async Task<IResult> GetEvents(HttpContext http, AppDbContext db, Guid id, CancellationToken ct)
+    private static async Task<IResult> GetEvents(
+        HttpContext http,
+        AppDbContext db,
+        IFixtureDetailSyncService detailSync,
+        Guid id,
+        CancellationToken ct)
     {
-        var exists = await db.Fixtures.AsNoTracking().AnyAsync(f => f.Id == id, ct);
-        if (!exists)
+        var fixture = await db.Fixtures.AsNoTracking()
+            .Where(f => f.Id == id)
+            .Select(f => new { f.Id, f.ExtId, f.Status })
+            .FirstOrDefaultAsync(ct);
+        if (fixture is null)
             return Results.NotFound();
 
-        var events = await db.FixtureEvents.AsNoTracking()
+        var events = await QueryEventsAsync(db, id, ct);
+        if ((events.Count == 0 || events.All(e => e.PlayerName == null)) &&
+            fixture.Status != FixtureStatus.NotStarted &&
+            fixture.ExtId > 0)
+        {
+            try
+            {
+                await detailSync.SyncFixtureDetailAsync(fixture.Id, fixture.ExtId, ct);
+                events = await QueryEventsAsync(db, id, ct);
+            }
+            catch
+            {
+                // Best-effort fallback
+            }
+        }
+
+        CacheControl.SetPublicMaxAge(http, 60);
+        return Results.Ok(events);
+    }
+
+    private static async Task<IResult> GetLineups(
+        HttpContext http,
+        AppDbContext db,
+        IFixtureDetailSyncService detailSync,
+        Guid id,
+        CancellationToken ct)
+    {
+        var fixture = await db.Fixtures.AsNoTracking()
+            .Where(f => f.Id == id)
+            .Select(f => new { f.Id, f.ExtId, f.Status })
+            .FirstOrDefaultAsync(ct);
+        if (fixture is null)
+            return Results.NotFound();
+
+        var lineups = await QueryLineupsAsync(db, id, ct);
+        if (lineups.Count == 0 &&
+            fixture.Status != FixtureStatus.NotStarted &&
+            fixture.ExtId > 0)
+        {
+            try
+            {
+                await detailSync.SyncFixtureDetailAsync(fixture.Id, fixture.ExtId, ct);
+                lineups = await QueryLineupsAsync(db, id, ct);
+            }
+            catch
+            {
+                // Best-effort fallback
+            }
+        }
+
+        CacheControl.SetPublicMaxAge(http, 60);
+        return Results.Ok(lineups);
+    }
+
+    private static Task<List<EventDto>> QueryEventsAsync(AppDbContext db, Guid id, CancellationToken ct) =>
+        db.FixtureEvents.AsNoTracking()
             .Where(e => e.FixtureId == id)
             .OrderBy(e => e.ExtSeq)
             .Select(e => new EventDto(
@@ -341,17 +404,8 @@ public static class MatchesEndpoints
                 db.Players.Where(p => p.Id == e.AssistPlayerId || (e.AssistName != null && p.Name == e.AssistName)).Select(p => p.PhotoUrl).FirstOrDefault()))
             .ToListAsync(ct);
 
-        CacheControl.SetPublicMaxAge(http, 60);
-        return Results.Ok(events);
-    }
-
-    private static async Task<IResult> GetLineups(HttpContext http, AppDbContext db, Guid id, CancellationToken ct)
-    {
-        var exists = await db.Fixtures.AsNoTracking().AnyAsync(f => f.Id == id, ct);
-        if (!exists)
-            return Results.NotFound();
-
-        var lineups = await db.FixtureLineups.AsNoTracking()
+    private static Task<List<LineupDto>> QueryLineupsAsync(AppDbContext db, Guid id, CancellationToken ct) =>
+        db.FixtureLineups.AsNoTracking()
             .Where(l => l.FixtureId == id)
             .Select(l => new LineupDto(
                 l.TeamId,
@@ -368,10 +422,6 @@ public static class MatchesEndpoints
                         p.IsStarter, p.Grid, p.Number))
                     .ToList()))
             .ToListAsync(ct);
-
-        CacheControl.SetPublicMaxAge(http, 60);
-        return Results.Ok(lineups);
-    }
 
     private static async Task<IResult> GetPlayerStats(HttpContext http, AppDbContext db, Guid id, CancellationToken ct)
     {

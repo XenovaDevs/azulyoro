@@ -51,8 +51,23 @@ public sealed class FixtureDetailSyncService(
             return 0;
         }
 
-        // Resolve teams (ext -> Guid). Any team we don't have is skipped.
+        // Resolve teams (ext -> Guid). Any team we don't have is created on the fly.
         var teamsByExt = await db.Teams.ToDictionaryAsync(t => t.ExtId, t => t.Id, ct);
+
+        foreach (var lineup in item.Lineups)
+        {
+            if (lineup.Team.Id is > 0 && !teamsByExt.ContainsKey(lineup.Team.Id.Value))
+            {
+                var team = new Team
+                {
+                    ExtId = lineup.Team.Id.Value,
+                    Name = lineup.Team.Name ?? $"Team {lineup.Team.Id}",
+                    IsTracked = false,
+                };
+                db.Teams.Add(team);
+                teamsByExt[lineup.Team.Id.Value] = team.Id;
+            }
+        }
 
         // Ensure every referenced player exists so names resolve. Opponent
         // players are created inactive with no team; the tracked team's players
