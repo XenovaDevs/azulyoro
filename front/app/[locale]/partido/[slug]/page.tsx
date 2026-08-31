@@ -131,12 +131,17 @@ export default async function MatchDetailPage({
           match={match}
           detail={detail}
           events={events}
+          lineups={lineups}
+          stats={stats}
+          locale={locale}
           labels={{
             live: t("live"),
             statusScheduled: t("statusScheduled"),
             statusFinished: t("statusFinished"),
             events: t("events"),
             eventsEmpty: t("eventsEmpty"),
+            lineups: t("lineups"),
+            playerStats: t("playerStats"),
             notStartedTitle: t("notStartedTitle"),
             notStartedDescription: t("notStartedDescription"),
           }}

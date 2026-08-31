@@ -230,53 +230,84 @@ export function MatchLineupsView({
                       key={player.playerId}
                       className="group flex flex-col items-center gap-1.5 transition-transform hover:scale-110"
                     >
-                      {/* Jersey Circle */}
-                      <div className="relative flex h-10 w-10 sm:h-12 sm:w-12 items-center justify-center rounded-full shadow-lg transition-shadow group-hover:shadow-amber-400/50">
-                        <div
-                          className={`flex h-full w-full items-center justify-center rounded-full border-2 font-bold tabular-nums text-sm sm:text-base ${
-                            isBoca
-                              ? "border-amber-400 bg-gradient-to-tr from-blue-900 via-blue-800 to-blue-950 text-amber-300 shadow-inner"
-                              : "border-slate-300 bg-gradient-to-tr from-slate-800 to-slate-900 text-white shadow-inner"
-                          }`}
-                        >
-                          {player.number ?? "–"}
-                        </div>
+                      {/* Tactical Player Circle with Photo & Badges */}
+                      <div className="relative flex h-11 w-11 sm:h-14 sm:w-14 items-center justify-center rounded-full shadow-xl transition-shadow group-hover:shadow-amber-400/50">
+                        {player.photoUrl ? (
+                          <div className={`relative h-full w-full rounded-full overflow-hidden border-2 shadow-inner bg-slate-900 ${
+                            isBoca ? "border-amber-400" : "border-slate-300"
+                          }`}>
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img
+                              src={player.photoUrl}
+                              alt={player.playerName ?? ""}
+                              className="h-full w-full object-cover object-top"
+                              loading="lazy"
+                            />
+                          </div>
+                        ) : (
+                          <div
+                            className={`flex h-full w-full items-center justify-center rounded-full border-2 font-bold tabular-nums text-sm sm:text-base ${
+                              isBoca
+                                ? "border-amber-400 bg-gradient-to-tr from-blue-900 via-blue-800 to-blue-950 text-amber-300 shadow-inner"
+                                : "border-slate-300 bg-gradient-to-tr from-slate-800 to-slate-900 text-white shadow-inner"
+                            }`}
+                          >
+                            {player.number ?? "–"}
+                          </div>
+                        )}
 
-                        {/* Event badges on jersey */}
-                        <div className="absolute -top-1 -right-1 flex gap-0.5">
+                        {/* Dorsal Number Badge (Bottom pill) */}
+                        {player.number != null && (
+                          <span className={`absolute -bottom-1 left-1/2 -translate-x-1/2 rounded-full px-1.5 py-0.2 text-[9px] sm:text-[10px] font-extrabold tabular-nums shadow-md ${
+                            isBoca ? "bg-amber-400 text-blue-950" : "bg-white text-slate-900"
+                          }`}>
+                            {player.number}
+                          </span>
+                        )}
+
+                        {/* Event badges floating on top-right */}
+                        <div className="absolute -top-1.5 -right-1.5 flex flex-col gap-0.5 z-20">
                           {badges.goals > 0 && (
                             <span
-                              className="flex h-4 w-4 items-center justify-center rounded-full bg-emerald-500 text-[10px] text-white shadow"
+                              className="flex h-4.5 w-4.5 items-center justify-center rounded-full bg-emerald-500 text-[10px] text-white shadow-md font-bold"
                               title={`${badges.goals} ${isEs ? "gol(es)" : "goal(s)"}`}
                             >
-                              ⚽
+                              ⚽{badges.goals > 1 ? badges.goals : ""}
                             </span>
                           )}
                           {badges.yellowCards > 0 && (
                             <span
-                              className="h-3.5 w-2.5 rounded-xs bg-yellow-400 shadow-sm inline-block"
+                              className="h-4 w-2.5 rounded-xs bg-amber-400 shadow-md inline-block border border-black/20"
                               title={isEs ? "Tarjeta amarilla" : "Yellow card"}
                             />
                           )}
                           {badges.redCards > 0 && (
                             <span
-                              className="h-3.5 w-2.5 rounded-xs bg-red-600 shadow-sm inline-block"
+                              className="h-4 w-2.5 rounded-xs bg-rose-600 shadow-md inline-block border border-black/20"
                               title={isEs ? "Tarjeta roja" : "Red card"}
                             />
                           )}
                           {badges.subbedOut && (
                             <span
-                              className="flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[9px] font-bold text-white shadow"
-                              title={isEs ? "Sustituido" : "Subbed out"}
+                              className="flex h-4 w-4 items-center justify-center rounded-full bg-rose-600 text-[9px] font-bold text-white shadow-md"
+                              title={isEs ? "Salió sustituido" : "Subbed out"}
                             >
                               ⬇️
+                            </span>
+                          )}
+                          {badges.subbedIn && (
+                            <span
+                              className="flex h-4 w-4 items-center justify-center rounded-full bg-emerald-600 text-[9px] font-bold text-white shadow-md"
+                              title={isEs ? "Ingresó de cambio" : "Subbed in"}
+                            >
+                              ⬆️
                             </span>
                           )}
                         </div>
                       </div>
 
                       {/* Player Name Pill */}
-                      <span className="max-w-[80px] sm:max-w-[100px] truncate rounded bg-black/75 px-1.5 py-0.5 text-center text-[10px] sm:text-xs font-semibold text-white backdrop-blur-xs border border-white/20 shadow-md">
+                      <span className="max-w-[85px] sm:max-w-[105px] truncate rounded-md bg-black/85 px-2 py-0.5 text-center text-[10px] sm:text-xs font-semibold text-white backdrop-blur-xs border border-white/20 shadow-md">
                         {player.playerName ?? "—"}
                       </span>
                     </div>
@@ -310,35 +341,41 @@ export function MatchLineupsView({
                       key={sub.playerId}
                       className="flex items-center justify-between py-2 text-sm hover:bg-[color-mix(in_oklab,var(--foreground)_3%,var(--card))] px-1 rounded transition-colors"
                     >
-                      <div className="flex items-center gap-3">
+                      <div className="flex items-center gap-2.5">
                         <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[var(--muted)] text-xs font-bold tabular-nums text-[var(--muted-foreground)]">
                           {sub.number ?? "–"}
                         </span>
+                        {sub.photoUrl && (
+                          <span className="h-6 w-6 shrink-0 rounded-full overflow-hidden border border-[var(--border)] bg-slate-900 inline-block">
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img src={sub.photoUrl} alt="" className="h-full w-full object-cover object-top" loading="lazy" />
+                          </span>
+                        )}
                         <span className="font-medium text-[var(--foreground)]">
                           {sub.playerName ?? "—"}
                         </span>
                       </div>
 
                       {/* Event indicators for substitutes */}
-                      <div className="flex items-center gap-1">
+                      <div className="flex items-center gap-1.5">
                         {badges.subbedIn && (
                           <span
-                            className="rounded bg-emerald-500/15 px-1.5 py-0.5 text-[10px] font-bold text-emerald-600"
+                            className="inline-flex items-center gap-0.5 rounded bg-emerald-500/15 px-1.5 py-0.5 text-[10px] font-bold text-emerald-500"
                             title={isEs ? "Ingresó al partido" : "Entered match"}
                           >
-                            ⬆️ {isEs ? "Ingresó" : "In"}
+                            ⬆️ {isEs ? "Entró" : "In"}
                           </span>
                         )}
                         {badges.goals > 0 && (
-                          <span className="text-xs" title="Gol">
-                            ⚽
+                          <span className="text-xs font-bold text-emerald-400 inline-flex items-center gap-0.5" title="Gol">
+                            ⚽{badges.goals > 1 ? badges.goals : ""}
                           </span>
                         )}
                         {badges.yellowCards > 0 && (
-                          <span className="h-3.5 w-2.5 rounded-xs bg-yellow-400 inline-block" />
+                          <span className="h-3.5 w-2.5 rounded-xs bg-amber-400 inline-block shadow-xs" title="Amarilla" />
                         )}
                         {badges.redCards > 0 && (
-                          <span className="h-3.5 w-2.5 rounded-xs bg-red-600 inline-block" />
+                          <span className="h-3.5 w-2.5 rounded-xs bg-rose-600 inline-block shadow-xs" title="Roja" />
                         )}
                       </div>
                     </li>
@@ -357,13 +394,19 @@ export function MatchLineupsView({
             <h3 className="mb-2 font-display text-sm font-semibold uppercase tracking-wider text-[var(--muted-foreground)]">
               {isEs ? "Titulares" : "Starting XI"}
             </h3>
-            <div className="grid grid-cols-2 gap-x-3 gap-y-1.5 text-xs text-[var(--foreground)]">
+            <div className="grid grid-cols-2 gap-x-3 gap-y-2 text-xs text-[var(--foreground)]">
               {starters.map((p) => (
-                <div key={p.playerId} className="flex items-center gap-1.5 truncate">
-                  <span className="tabular-nums font-semibold text-[var(--oro-500)]">
+                <div key={p.playerId} className="flex items-center gap-2 truncate">
+                  <span className="tabular-nums font-bold text-[var(--oro-500)] text-xs">
                     {p.number ?? "–"}.
                   </span>
-                  <span className="truncate">{p.playerName ?? "—"}</span>
+                  {p.photoUrl && (
+                    <span className="h-5 w-5 shrink-0 rounded-full overflow-hidden border border-[var(--border)] bg-slate-900 inline-block">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={p.photoUrl} alt="" className="h-full w-full object-cover object-top" loading="lazy" />
+                    </span>
+                  )}
+                  <span className="truncate font-medium">{p.playerName ?? "—"}</span>
                 </div>
               ))}
             </div>

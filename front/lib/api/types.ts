@@ -45,13 +45,16 @@ export interface EventDto {
   teamName: string | null;
   playerId: string | null;
   playerName: string | null;
+  playerPhotoUrl?: string | null;
   assistPlayerId: string | null;
   assistName: string | null;
+  assistPhotoUrl?: string | null;
 }
 
 export interface LineupPlayerDto {
   playerId: string;
   playerName: string | null;
+  photoUrl?: string | null;
   isStarter: boolean;
   grid: string | null;
   number: number | null;

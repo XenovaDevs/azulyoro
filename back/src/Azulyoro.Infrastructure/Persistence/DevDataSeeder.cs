@@ -271,6 +271,51 @@ public static class DevDataSeeder
             new Standing { Competition = tablaAnual, CompetitionId = tablaAnual.Id, SeasonId = season.Id, Team = independiente, TeamId = independiente.Id, Rank = 6, Points = 38, Played = 27, Win = 9, Draw = 11, Lose = 7, GoalsFor = 27, GoalsAgainst = 26, GoalsDiff = 1, Form = "DLDWW", GroupName = "Tabla Anual" },
         };
 
+        var promedios = new Competition
+        {
+            ExtId = 999129,
+            Name = "Tabla de Promedios",
+            Type = CompetitionType.League,
+            Country = "Argentina",
+            LogoUrl = "https://media.api-sports.io/football/leagues/128.png",
+        };
+
+        // Lineup Boca
+        var lineupBoca = new FixtureLineup
+        {
+            Fixture = finished,
+            FixtureId = finished.Id,
+            Team = boca,
+            TeamId = boca.Id,
+            Formation = "4-3-3",
+            CoachName = "Diego Martínez",
+        };
+        lineupBoca.Players.Add(new FixtureLineupPlayer { Lineup = lineupBoca, PlayerId = players[0].Id, IsStarter = true, Number = 1, Grid = "1:1" });
+        lineupBoca.Players.Add(new FixtureLineupPlayer { Lineup = lineupBoca, PlayerId = players[1].Id, IsStarter = true, Number = 6, Grid = "2:2" });
+        lineupBoca.Players.Add(new FixtureLineupPlayer { Lineup = lineupBoca, PlayerId = players[2].Id, IsStarter = true, Number = 10, Grid = "4:2" });
+
+        // Lineup River
+        var lineupRiver = new FixtureLineup
+        {
+            Fixture = finished,
+            FixtureId = finished.Id,
+            Team = river,
+            TeamId = river.Id,
+            Formation = "4-4-2",
+            CoachName = "Marcelo Gallardo",
+        };
+
+        // Tabla de Promedios Standings (Descensos)
+        var promediosStandings = new[]
+        {
+            new Standing { Competition = promedios, CompetitionId = promedios.Id, SeasonId = season.Id, Team = river, TeamId = river.Id, Rank = 1, Points = 180, Played = 95, Win = 52, Draw = 24, Lose = 19, GoalsFor = 150, GoalsAgainst = 80, GoalsDiff = 70, Form = "WWDWW", GroupName = "Tabla de Promedios" },
+            new Standing { Competition = promedios, CompetitionId = promedios.Id, SeasonId = season.Id, Team = boca, TeamId = boca.Id, Rank = 2, Points = 175, Played = 95, Win = 50, Draw = 25, Lose = 20, GoalsFor = 145, GoalsAgainst = 82, GoalsDiff = 63, Form = "WWWDW", GroupName = "Tabla de Promedios" },
+            new Standing { Competition = promedios, CompetitionId = promedios.Id, SeasonId = season.Id, Team = racing, TeamId = racing.Id, Rank = 3, Points = 160, Played = 95, Win = 45, Draw = 25, Lose = 25, GoalsFor = 130, GoalsAgainst = 90, GoalsDiff = 40, Form = "WLWDW", GroupName = "Tabla de Promedios" },
+            new Standing { Competition = promedios, CompetitionId = promedios.Id, SeasonId = season.Id, Team = velez, TeamId = velez.Id, Rank = 4, Points = 145, Played = 95, Win = 38, Draw = 31, Lose = 26, GoalsFor = 110, GoalsAgainst = 95, GoalsDiff = 15, Form = "LWDWW", GroupName = "Tabla de Promedios" },
+            new Standing { Competition = promedios, CompetitionId = promedios.Id, SeasonId = season.Id, Team = sanLorenzo, TeamId = sanLorenzo.Id, Rank = 5, Points = 138, Played = 95, Win = 35, Draw = 33, Lose = 27, GoalsFor = 98, GoalsAgainst = 92, GoalsDiff = 6, Form = "DDWLW", GroupName = "Tabla de Promedios" },
+            new Standing { Competition = promedios, CompetitionId = promedios.Id, SeasonId = season.Id, Team = independiente, TeamId = independiente.Id, Rank = 6, Points = 125, Played = 95, Win = 30, Draw = 35, Lose = 30, GoalsFor = 92, GoalsAgainst = 98, GoalsDiff = -6, Form = "DLDWW", GroupName = "Tabla de Promedios" },
+        };
+
         var playerSeasonStat = new PlayerSeasonStats
         {
             PlayerId = players[2].Id,
@@ -282,14 +327,16 @@ public static class DevDataSeeder
         };
 
         db.Seasons.Add(season);
-        db.Competitions.AddRange(liga, sudamericana, tablaAnual);
+        db.Competitions.AddRange(liga, sudamericana, tablaAnual, promedios);
         db.Teams.AddRange(boca, river, racing, independiente, sanLorenzo, velez, fortaleza, nacional, sportivoTrinidense);
         db.Players.AddRange(players);
         db.Fixtures.AddRange(upcoming, finished);
         db.FixtureEvents.AddRange(events);
+        db.FixtureLineups.AddRange(lineupBoca, lineupRiver);
         db.Standings.AddRange(ligaStandings);
         db.Standings.AddRange(sudaStandings);
         db.Standings.AddRange(tablaAnualStandings);
+        db.Standings.AddRange(promediosStandings);
         db.PlayerSeasonStats.Add(playerSeasonStat);
 
         await db.SaveChangesAsync(ct);

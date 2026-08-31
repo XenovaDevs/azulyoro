@@ -1,15 +1,33 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import type { EventDto, MatchDetailDto, MatchDto } from "@/lib/api/types";
+import type { EventDto, LineupDto, MatchDetailDto, MatchDto, PlayerStatDto } from "@/lib/api/types";
 import { classifyStatus } from "@/lib/matchStatus";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { LiveScoreBadge } from "@/components/sports/LiveScoreBadge";
+import { MatchKickoffTime } from "@/components/sports/MatchKickoffTime";
+import { MatchEventsList } from "@/components/sports/MatchEventsList";
+import { MatchLineupsView } from "@/components/sports/MatchLineupsView";
 
-type LiveEvent = Pick<
-  EventDto,
-  "minute" | "extraMinute" | "type" | "detail" | "teamName" | "playerName" | "assistName"
->;
+interface LiveMatchStreamProps {
+  match: MatchDto;
+  detail: MatchDetailDto | null;
+  events: EventDto[];
+  lineups?: LineupDto[];
+  stats?: PlayerStatDto[];
+  locale?: string;
+  labels: {
+    live: string;
+    statusScheduled: string;
+    statusFinished: string;
+    events: string;
+    eventsEmpty: string;
+    lineups?: string;
+    playerStats?: string;
+    notStartedTitle: string;
+    notStartedDescription: string;
+  };
+}
 
 interface LiveUpdate {
   fixtureId: string;
@@ -17,22 +35,7 @@ interface LiveUpdate {
   elapsed: number | null;
   homeGoals: number | null;
   awayGoals: number | null;
-  events: LiveEvent[];
-}
-
-interface LiveMatchStreamProps {
-  match: MatchDto;
-  detail: MatchDetailDto | null;
   events: EventDto[];
-  labels: {
-    live: string;
-    statusScheduled: string;
-    statusFinished: string;
-    events: string;
-    eventsEmpty: string;
-    notStartedTitle: string;
-    notStartedDescription: string;
-  };
 }
 
 const API_URL = (process.env.NEXT_PUBLIC_API_URL ?? "https://api.azulyoro.com.ar").replace(/\/$/, "");
@@ -52,26 +55,22 @@ function TeamCrest({ name, logoUrl }: { name: string | null; logoUrl: string | n
   );
 }
 
-function initialEvents(events: EventDto[]): LiveEvent[] {
-  return events.map(({ minute, extraMinute, type, detail, teamName, playerName, assistName }) => ({
-    minute,
-    extraMinute,
-    type,
-    detail,
-    teamName,
-    playerName,
-    assistName,
-  }));
-}
-
-export function LiveMatchStream({ match, detail, events, labels }: LiveMatchStreamProps) {
+export function LiveMatchStream({
+  match,
+  detail,
+  events,
+  lineups = [],
+  stats = [],
+  locale = "es",
+  labels,
+}: LiveMatchStreamProps) {
   const [update, setUpdate] = useState<LiveUpdate>(() => ({
     fixtureId: match.id,
     status: match.status,
     elapsed: detail?.elapsed ?? null,
     homeGoals: match.homeGoals,
     awayGoals: match.awayGoals,
-    events: initialEvents(events),
+    events,
   }));
 
   useEffect(() => {
@@ -115,13 +114,10 @@ export function LiveMatchStream({ match, detail, events, labels }: LiveMatchStre
 
   const state = classifyStatus(update.status);
   const played = state !== "scheduled";
-  const kickoff = new Date(match.dateUtc).toLocaleString(undefined, {
-    dateStyle: "full",
-    timeStyle: "short",
-  });
 
   return (
     <div className="flex flex-col gap-8" aria-live="polite">
+      {/* Scoreboard Card */}
       <section className="overflow-hidden rounded-2xl border border-[var(--border)] bg-gradient-to-b from-[var(--azul-900)] to-[var(--card)] p-6 text-[var(--foreground)] shadow-lg">
         <div className="mb-6 flex items-center justify-between gap-2 text-xs font-semibold uppercase tracking-wide">
           <span className="text-[var(--oro-500)]">{match.competitionName}</span>
@@ -155,40 +151,87 @@ export function LiveMatchStream({ match, detail, events, labels }: LiveMatchStre
           </div>
         </div>
 
-        <p className="mt-6 text-center text-sm text-[var(--muted-foreground)]">
-          <time dateTime={match.dateUtc}>{kickoff}</time>
-          {detail?.venue ? ` · ${detail.venue}` : ""}
-          {detail?.round ? ` · ${detail.round}` : ""}
-        </p>
+        <div className="mt-6 flex flex-wrap items-center justify-center gap-1 text-center text-sm text-[var(--muted-foreground)]">
+          <MatchKickoffTime
+            dateUtc={match.dateUtc}
+            locale={locale}
+            variant="full"
+            showTimezoneBadge
+          />
+          {detail?.venue ? <span>· {detail.venue}</span> : null}
+          {detail?.round ? <span>· {detail.round}</span> : null}
+        </div>
       </section>
 
       {!played && (
         <EmptyState title={labels.notStartedTitle} description={labels.notStartedDescription} />
       )}
 
+      {/* Tactical Lineups (Field from above & Bench) */}
+      {lineups.length > 0 && (
+        <section>
+          <h2 className="mb-4 font-display text-xl font-bold">
+            {labels.lineups ?? (locale === "es" ? "Formaciones y Cancha Táctica" : "Lineups & Tactical Pitch")}
+          </h2>
+          <MatchLineupsView
+            lineups={lineups}
+            events={update.events}
+            locale={locale}
+            homeTeamId={match.homeTeamId}
+            awayTeamId={match.awayTeamId}
+          />
+        </section>
+      )}
+
+      {/* Incidencias / Events List */}
       {played && (
         <section>
-          <h2 className="mb-3 font-display text-lg font-semibold">{labels.events}</h2>
+          <h2 className="mb-4 font-display text-xl font-bold">{labels.events}</h2>
           {update.events.length > 0 ? (
-            <ol className="flex flex-col gap-2">
-              {update.events.map((event, index) => (
-                <li key={`${event.minute}-${event.type}-${index}`} className="flex items-baseline gap-3 rounded-md border border-[var(--border)] px-3 py-2 text-sm">
-                  <span className="w-10 tabular-nums font-semibold text-[var(--accent)]">
-                    {event.minute}{event.extraMinute ? `+${event.extraMinute}` : ""}&apos;
-                  </span>
-                  <span className="font-medium">{event.type}</span>
-                  <span className="text-[var(--muted-foreground)]">
-                    {event.playerName ?? ""}
-                    {event.assistName ? ` (${event.assistName})` : ""}
-                    {event.detail ? ` · ${event.detail}` : ""}
-                  </span>
-                  <span className="ml-auto text-xs text-[var(--muted-foreground)]">{event.teamName ?? ""}</span>
-                </li>
-              ))}
-            </ol>
+            <MatchEventsList
+              events={update.events}
+              locale={locale}
+              homeTeamId={match.homeTeamId}
+              awayTeamId={match.awayTeamId}
+              homeTeamName={match.homeTeamName}
+              awayTeamName={match.awayTeamName}
+            />
           ) : (
             <EmptyState title={labels.eventsEmpty} />
           )}
+        </section>
+      )}
+
+      {/* Player Stats */}
+      {stats.length > 0 && (
+        <section>
+          <h2 className="mb-3 font-display text-lg font-semibold">
+            {labels.playerStats ?? (locale === "es" ? "Estadísticas de jugadores" : "Player Stats")}
+          </h2>
+          <div className="overflow-x-auto rounded-lg border border-[var(--border)]">
+            <table className="w-full text-sm">
+              <thead className="bg-[var(--muted)] text-left text-xs uppercase tracking-wide text-[var(--muted-foreground)]">
+                <tr>
+                  <th className="px-3 py-2">{locale === "es" ? "Jugador" : "Player"}</th>
+                  <th className="px-3 py-2 text-right">{locale === "es" ? "Min" : "Min"}</th>
+                  <th className="px-3 py-2 text-right">{locale === "es" ? "G" : "G"}</th>
+                  <th className="px-3 py-2 text-right">{locale === "es" ? "A" : "A"}</th>
+                  <th className="px-3 py-2 text-right">{locale === "es" ? "Nota" : "Rating"}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {stats.map((s, i) => (
+                  <tr key={i} className="border-t border-[var(--border)]">
+                    <td className="px-3 py-2 font-medium">{s.playerName ?? "—"}</td>
+                    <td className="px-3 py-2 text-right tabular-nums">{s.minutes ?? 0}</td>
+                    <td className="px-3 py-2 text-right tabular-nums">{s.goals}</td>
+                    <td className="px-3 py-2 text-right tabular-nums">{s.assists}</td>
+                    <td className="px-3 py-2 text-right tabular-nums font-semibold text-[var(--oro-500)]">{s.rating ?? "—"}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </section>
       )}
     </div>

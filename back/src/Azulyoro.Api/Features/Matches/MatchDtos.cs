@@ -50,12 +50,15 @@ public record EventDto(
     string? TeamName,
     Guid? PlayerId,
     string? PlayerName,
+    string? PlayerPhotoUrl,
     Guid? AssistPlayerId,
-    string? AssistName);
+    string? AssistName,
+    string? AssistPhotoUrl);
 
 public record LineupPlayerDto(
     Guid PlayerId,
     string? PlayerName,
+    string? PhotoUrl,
     bool IsStarter,
     string? Grid,
     int? Number);

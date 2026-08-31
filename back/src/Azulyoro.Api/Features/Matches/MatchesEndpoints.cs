@@ -335,8 +335,10 @@ public static class MatchesEndpoints
                 db.Teams.Where(t => t.Id == e.TeamId).Select(t => t.Name).FirstOrDefault(),
                 e.PlayerId,
                 db.Players.Where(p => p.Id == e.PlayerId).Select(p => p.Name).FirstOrDefault(),
+                db.Players.Where(p => p.Id == e.PlayerId).Select(p => p.PhotoUrl).FirstOrDefault(),
                 e.AssistPlayerId,
-                db.Players.Where(p => p.Id == e.AssistPlayerId).Select(p => p.Name).FirstOrDefault()))
+                db.Players.Where(p => p.Id == e.AssistPlayerId).Select(p => p.Name).FirstOrDefault(),
+                db.Players.Where(p => p.Id == e.AssistPlayerId).Select(p => p.PhotoUrl).FirstOrDefault()))
             .ToListAsync(ct);
 
         CacheControl.SetPublicMaxAge(http, 60);
@@ -362,6 +364,7 @@ public static class MatchesEndpoints
                     .Select(p => new LineupPlayerDto(
                         p.PlayerId,
                         db.Players.Where(pl => pl.Id == p.PlayerId).Select(pl => pl.Name).FirstOrDefault(),
+                        db.Players.Where(pl => pl.Id == p.PlayerId).Select(pl => pl.PhotoUrl).FirstOrDefault(),
                         p.IsStarter, p.Grid, p.Number))
                     .ToList()))
             .ToListAsync(ct);

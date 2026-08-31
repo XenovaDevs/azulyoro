@@ -17,6 +17,7 @@ public class LiveSyncService(
     AppDbContext db,
     IApiFootballClient api,
     ILogger<LiveSyncService> logger,
+    IFixtureDetailSyncService? detailSync = null,
     IOptions<SportsSyncOptions>? options = null,
     LiveUpdateHub? updates = null)
 {
@@ -56,49 +57,75 @@ public class LiveSyncService(
     /// </summary>
     public async Task<bool> SyncFixtureAsync(Guid fixtureId, int extId, CancellationToken ct)
     {
-        var response = await api.GetAsync<ApiFixtureItem>(
-            "fixtures", new Dictionary<string, string?> { ["id"] = extId.ToString() }, ct);
-
-        var item = response.Response.FirstOrDefault();
-        if (item is null)
+        if (detailSync is not null)
         {
-            logger.LogWarning("Live sync: no payload for fixture ext_id {ExtId}.", extId);
-            return false;
+            await detailSync.SyncFixtureDetailAsync(fixtureId, extId, ct);
+        }
+        else
+        {
+            var response = await api.GetAsync<ApiFixtureItem>(
+                "fixtures", new Dictionary<string, string?> { ["id"] = extId.ToString() }, ct);
+
+            var item = response.Response.FirstOrDefault();
+            if (item is null)
+            {
+                logger.LogWarning("Live sync: no payload for fixture ext_id {ExtId}.", extId);
+                return false;
+            }
+
+            var fixtureToUpdate = await db.Fixtures
+                .Include(f => f.Events)
+                .FirstOrDefaultAsync(f => f.Id == fixtureId, ct);
+            if (fixtureToUpdate is null)
+            {
+                return false;
+            }
+
+            fixtureToUpdate.Status = FixtureStatusExtensions.FromApiShort(item.Fixture.Status.Short);
+            fixtureToUpdate.Elapsed = item.Fixture.Status.Elapsed;
+            fixtureToUpdate.HomeGoals = item.Goals.Home;
+            fixtureToUpdate.AwayGoals = item.Goals.Away;
+            fixtureToUpdate.LastSyncedAt = DateTime.UtcNow;
+
+            for (var seq = 0; seq < item.Events.Count; seq++)
+            {
+                var source = item.Events[seq];
+                var target = fixtureToUpdate.Events.FirstOrDefault(e => e.ExtSeq == seq);
+                if (target is null)
+                {
+                    target = new FixtureEvent { FixtureId = fixtureToUpdate.Id, ExtSeq = seq };
+                    fixtureToUpdate.Events.Add(target);
+                }
+
+                target.Minute = source.Time.Elapsed;
+                target.ExtraMinute = source.Time.Extra;
+                target.Type = MapEventType(source.Type);
+                target.Detail = source.Detail;
+                target.Comments = source.Comments;
+            }
+
+            await db.SaveChangesAsync(ct);
         }
 
-        var fixture = await db.Fixtures
-            .Include(f => f.Events)
+        var fixture = await db.Fixtures.AsNoTracking()
             .FirstOrDefaultAsync(f => f.Id == fixtureId, ct);
         if (fixture is null)
         {
             return false;
         }
 
-        fixture.Status = FixtureStatusExtensions.FromApiShort(item.Fixture.Status.Short);
-        fixture.Elapsed = item.Fixture.Status.Elapsed;
-        fixture.HomeGoals = item.Goals.Home;
-        fixture.AwayGoals = item.Goals.Away;
-        fixture.LastSyncedAt = DateTime.UtcNow;
-
-        // Upsert events keyed by their ordinal within the fixture feed.
-        for (var seq = 0; seq < item.Events.Count; seq++)
-        {
-            var source = item.Events[seq];
-            var target = fixture.Events.FirstOrDefault(e => e.ExtSeq == seq);
-            if (target is null)
-            {
-                target = new FixtureEvent { FixtureId = fixture.Id, ExtSeq = seq };
-                fixture.Events.Add(target);
-            }
-
-            target.Minute = source.Time.Elapsed;
-            target.ExtraMinute = source.Time.Extra;
-            target.Type = MapEventType(source.Type);
-            target.Detail = source.Detail;
-            target.Comments = source.Comments;
-        }
-
-        await db.SaveChangesAsync(ct);
+        var events = await db.FixtureEvents.AsNoTracking()
+            .Where(e => e.FixtureId == fixtureId)
+            .OrderBy(e => e.ExtSeq)
+            .Select(e => new LiveEventUpdate(
+                e.Minute,
+                e.ExtraMinute,
+                e.Type.ToString(),
+                e.Detail,
+                db.Teams.Where(t => t.Id == e.TeamId).Select(t => t.Name).FirstOrDefault(),
+                db.Players.Where(p => p.Id == e.PlayerId).Select(p => p.Name).FirstOrDefault(),
+                db.Players.Where(p => p.Id == e.AssistPlayerId).Select(p => p.Name).FirstOrDefault()))
+            .ToListAsync(ct);
 
         updates.Publish(new LiveFixtureUpdate(
             fixture.Id,
@@ -106,7 +133,7 @@ public class LiveSyncService(
             fixture.Elapsed,
             fixture.HomeGoals,
             fixture.AwayGoals,
-            item.Events.Select(MapEvent).ToArray()));
+            events));
 
         var finished = fixture.Status.IsFinished();
         if (finished)
@@ -116,15 +143,6 @@ public class LiveSyncService(
         return finished;
     }
 
-    private static LiveEventUpdate MapEvent(ApiFixtureEvent source) => new(
-        source.Time.Elapsed,
-        source.Time.Extra,
-        source.Type ?? "Other",
-        source.Detail,
-        source.Team.Name,
-        source.Player.Name,
-        source.Assist.Name);
-
     private static EventType MapEventType(string? apiType) => apiType?.ToLowerInvariant() switch
     {
         "goal" => EventType.Goal,
@@ -133,4 +151,13 @@ public class LiveSyncService(
         "var" => EventType.Var,
         _ => EventType.Other,
     };
+
+    private static LiveEventUpdate MapEvent(ApiFixtureEvent source) => new(
+        source.Time.Elapsed,
+        source.Time.Extra,
+        source.Type ?? "Other",
+        source.Detail,
+        source.Team.Name,
+        source.Player.Name,
+        source.Assist.Name);
 }
