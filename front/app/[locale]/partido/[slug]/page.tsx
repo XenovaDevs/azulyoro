@@ -195,18 +195,16 @@ export default async function MatchDetailPage({
       </section>
 
       {/* Lineups (Tactical Pitch & Substitutes) */}
-      {lineups.length > 0 && (
-        <section>
-          <h2 className="mb-4 font-display text-xl font-bold">{t("lineups")}</h2>
-          <MatchLineupsView
-            lineups={lineups}
-            events={events}
-            locale={locale}
-            homeTeamId={match.homeTeamId}
-            awayTeamId={match.awayTeamId}
-          />
-        </section>
-      )}
+      <section>
+        <h2 className="mb-4 font-display text-xl font-bold">{t("lineups")}</h2>
+        <MatchLineupsView
+          lineups={lineups}
+          events={events}
+          locale={locale}
+          homeTeamId={match.homeTeamId}
+          awayTeamId={match.awayTeamId}
+        />
+      </section>
 
       {/* Events */}
       {played && (

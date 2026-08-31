@@ -168,20 +168,18 @@ export function LiveMatchStream({
       )}
 
       {/* Tactical Lineups (Field from above & Bench) */}
-      {lineups.length > 0 && (
-        <section>
-          <h2 className="mb-4 font-display text-xl font-bold">
-            {labels.lineups ?? (locale === "es" ? "Formaciones y Cancha Táctica" : "Lineups & Tactical Pitch")}
-          </h2>
-          <MatchLineupsView
-            lineups={lineups}
-            events={update.events}
-            locale={locale}
-            homeTeamId={match.homeTeamId}
-            awayTeamId={match.awayTeamId}
-          />
-        </section>
-      )}
+      <section>
+        <h2 className="mb-4 font-display text-xl font-bold">
+          {labels.lineups ?? (locale === "es" ? "Formaciones y Cancha Táctica" : "Lineups & Tactical Pitch")}
+        </h2>
+        <MatchLineupsView
+          lineups={lineups}
+          events={update.events}
+          locale={locale}
+          homeTeamId={match.homeTeamId}
+          awayTeamId={match.awayTeamId}
+        />
+      </section>
 
       {/* Incidencias / Events List */}
       {played && (

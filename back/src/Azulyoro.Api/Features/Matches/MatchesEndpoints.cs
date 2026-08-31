@@ -332,13 +332,13 @@ public static class MatchesEndpoints
             .Select(e => new EventDto(
                 e.Minute, e.ExtraMinute, e.Type.ToString(), e.Detail,
                 e.TeamId,
-                db.Teams.Where(t => t.Id == e.TeamId).Select(t => t.Name).FirstOrDefault(),
+                e.TeamName ?? db.Teams.Where(t => t.Id == e.TeamId).Select(t => t.Name).FirstOrDefault(),
                 e.PlayerId,
-                db.Players.Where(p => p.Id == e.PlayerId).Select(p => p.Name).FirstOrDefault(),
-                db.Players.Where(p => p.Id == e.PlayerId).Select(p => p.PhotoUrl).FirstOrDefault(),
+                e.PlayerName ?? db.Players.Where(p => p.Id == e.PlayerId).Select(p => p.Name).FirstOrDefault(),
+                db.Players.Where(p => p.Id == e.PlayerId || (e.PlayerName != null && p.Name == e.PlayerName)).Select(p => p.PhotoUrl).FirstOrDefault(),
                 e.AssistPlayerId,
-                db.Players.Where(p => p.Id == e.AssistPlayerId).Select(p => p.Name).FirstOrDefault(),
-                db.Players.Where(p => p.Id == e.AssistPlayerId).Select(p => p.PhotoUrl).FirstOrDefault()))
+                e.AssistName ?? db.Players.Where(p => p.Id == e.AssistPlayerId).Select(p => p.Name).FirstOrDefault(),
+                db.Players.Where(p => p.Id == e.AssistPlayerId || (e.AssistName != null && p.Name == e.AssistName)).Select(p => p.PhotoUrl).FirstOrDefault()))
             .ToListAsync(ct);
 
         CacheControl.SetPublicMaxAge(http, 60);

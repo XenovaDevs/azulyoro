@@ -38,6 +38,9 @@ public class FixtureEventConfiguration : IEntityTypeConfiguration<FixtureEvent>
         b.Property(x => x.Type).HasConversion<string>().HasMaxLength(16);
         b.Property(x => x.Detail).HasMaxLength(120);
         b.Property(x => x.Comments).HasMaxLength(200);
+        b.Property(x => x.PlayerName).HasMaxLength(120);
+        b.Property(x => x.AssistName).HasMaxLength(120);
+        b.Property(x => x.TeamName).HasMaxLength(120);
 
         b.HasOne(x => x.Fixture).WithMany(f => f.Events)
             .HasForeignKey(x => x.FixtureId).OnDelete(DeleteBehavior.Cascade);

@@ -50,8 +50,11 @@ public class FixtureEvent : Entity
     public int? ExtraMinute { get; set; }
 
     public Guid? TeamId { get; set; }
+    public string? TeamName { get; set; }
     public Guid? PlayerId { get; set; }
+    public string? PlayerName { get; set; }
     public Guid? AssistPlayerId { get; set; }
+    public string? AssistName { get; set; }
 
     public EventType Type { get; set; }
     public string? Detail { get; set; }

@@ -134,7 +134,33 @@ export function MatchLineupsView({
   const isEs = locale === "es";
 
   if (!lineups || lineups.length === 0) {
-    return null;
+    return (
+      <div className="relative flex flex-col overflow-hidden rounded-2xl border-2 border-emerald-800/80 bg-gradient-to-b from-emerald-700 via-emerald-800 to-emerald-900 p-8 shadow-2xl text-white">
+        {/* Pitch Field Markings (SVG overlay) */}
+        <div className="pointer-events-none absolute inset-0 opacity-40">
+          <div className="absolute inset-3 border-2 border-white/60 rounded-sm" />
+          <div className="absolute top-1/2 left-3 right-3 h-0.5 bg-white/60 -translate-y-1/2" />
+          <div className="absolute top-1/2 left-1/2 h-28 w-28 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-white/60" />
+          <div className="absolute top-1/2 left-1/2 h-2 w-2 -translate-x-1/2 -translate-y-1/2 rounded-full bg-white/80" />
+          <div className="absolute top-3 left-1/2 h-16 w-36 -translate-x-1/2 border-2 border-t-0 border-white/60" />
+          <div className="absolute bottom-3 left-1/2 h-16 w-36 -translate-x-1/2 border-2 border-b-0 border-white/60" />
+        </div>
+
+        <div className="relative z-10 my-12 flex flex-col items-center justify-center gap-3 text-center">
+          <span className="flex h-14 w-14 items-center justify-center rounded-full bg-black/50 text-2xl border border-white/20 backdrop-blur-xs shadow-lg">
+            📋
+          </span>
+          <h3 className="font-display text-lg font-bold text-white">
+            {isEs ? "Alineaciones no disponibles" : "Lineups not available"}
+          </h3>
+          <p className="max-w-md text-xs sm:text-sm text-emerald-100/80">
+            {isEs
+              ? "Las formaciones tácticas oficiales de los equipos se publican habitualmente 1 hora antes del pitazo inicial o tras la confirmación de las autoridades."
+              : "Official starting lineups and tactical formations are typically confirmed 1 hour before kickoff."}
+          </p>
+        </div>
+      </div>
+    );
   }
 
   const activeLineup = lineups[selectedTeamIdx] ?? lineups[0];

@@ -82,10 +82,13 @@ public sealed class FixtureDetailSyncService(
         }
 
         // Post-materialization filter for finished statuses (IsFinished is an
-        // extension method, not translatable to SQL), then exclude any fixture
-        // that already has events.
+        // extension method, not translatable to SQL), then target any fixture
+        // that lacks lineups, lacks events, or has events without resolved player names.
         var candidates = await db.Fixtures.AsNoTracking()
-            .Where(f => f.IsBoca && !db.FixtureEvents.Any(e => e.FixtureId == f.Id))
+            .Where(f => f.IsBoca && (
+                !db.FixtureLineups.Any(l => l.FixtureId == f.Id) ||
+                !db.FixtureEvents.Any(e => e.FixtureId == f.Id) ||
+                db.FixtureEvents.Any(e => e.FixtureId == f.Id && e.PlayerName == null && e.PlayerId == null)))
             .OrderByDescending(f => f.DateUtc)
             .Select(f => new { f.Id, f.ExtId, f.Status })
             .ToListAsync(ct);
@@ -96,7 +99,7 @@ public sealed class FixtureDetailSyncService(
             .ToList();
 
         logger.LogInformation(
-            "Fixture-detail backfill: {Count} finished fixtures without events (cap {Max}).",
+            "Fixture-detail backfill: {Count} finished fixtures needing details/lineups (cap {Max}).",
             targets.Count, max);
 
         foreach (var target in targets)
@@ -192,8 +195,11 @@ public sealed class FixtureDetailSyncService(
             target.Minute = source.Time.Elapsed;
             target.ExtraMinute = source.Time.Extra;
             target.TeamId = ResolveNullable(teams, source.Team.Id);
+            target.TeamName = source.Team.Name;
             target.PlayerId = ResolveNullable(players, source.Player.Id);
+            target.PlayerName = source.Player.Name;
             target.AssistPlayerId = ResolveNullable(players, source.Assist.Id);
+            target.AssistName = source.Assist.Name;
             target.Type = MapEventType(source.Type);
             target.Detail = source.Detail;
             target.Comments = source.Comments;
