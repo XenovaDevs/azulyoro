@@ -31,16 +31,16 @@ export default async function StandingsPage({
   const rows = standings ?? [];
 
   return (
-    <main className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-8 px-4 py-10">
+    <main className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-6 sm:gap-8 px-3 sm:px-4 py-6 sm:py-10">
       <Breadcrumbs
         items={[{ label: tc("home"), href: "/" }, { label: t("title") }]}
       />
 
-      <header className="flex flex-col gap-2">
-        <h1 className="font-display text-3xl font-bold tracking-tight">
+      <header className="flex flex-col gap-1.5 sm:gap-2">
+        <h1 className="font-display text-2xl sm:text-3xl font-bold tracking-tight">
           {t("title")}
         </h1>
-        <p className="text-[var(--muted-foreground)]">{t("description")}</p>
+        <p className="text-sm sm:text-base text-[var(--muted-foreground)]">{t("description")}</p>
       </header>
 
       {rows.length > 0 ? (

@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { memo, useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
 import type { StandingDto } from "@/lib/api/types";
 import { StandingsTable } from "./StandingsTable";
@@ -60,7 +60,7 @@ function isGeneralOrAnnual(name: string): boolean {
   );
 }
 
-export function StandingsFilterView({
+export const StandingsFilterView = memo(function StandingsFilterView({
   standings,
   locale = "es",
   bocaTeamId,
@@ -68,7 +68,7 @@ export function StandingsFilterView({
   const t = useTranslations("Standings");
   const isEs = locale === "es";
 
-  // Group standings by competition name or groupName
+  // Group standings by competition name and groups
   const tournaments = useMemo(() => {
     const map = new Map<
       string,
@@ -195,14 +195,17 @@ export function StandingsFilterView({
   }, [tournaments, activeTab]);
 
   return (
-    <div className="flex flex-col gap-6">
-      {/* Tournament Selector Tabs */}
+    <div className="flex flex-col gap-6 w-full">
+      {/* Tournament Selector Tabs: Horizontal scrollable on small screens */}
       {tournaments.length > 1 && (
-        <div className="flex flex-wrap items-center gap-2 border-b border-[var(--border)] pb-3">
+        <nav
+          aria-label={t("title")}
+          className="flex items-center gap-2 overflow-x-auto no-scrollbar scroll-smooth touch-pan-x border-b border-[var(--border)] pb-3"
+        >
           <button
             type="button"
             onClick={() => setActiveTab("all")}
-            className={`rounded-lg px-4 py-2 text-sm font-semibold transition-all ${
+            className={`shrink-0 rounded-lg px-4 py-2 text-sm font-semibold transition-all min-h-[40px] ${
               activeTab === "all"
                 ? "bg-[var(--accent)] text-white shadow-md"
                 : "bg-[var(--muted)] text-[var(--muted-foreground)] hover:bg-[color-mix(in_oklab,var(--foreground)_8%,var(--muted))] hover:text-[var(--foreground)]"
@@ -218,13 +221,13 @@ export function StandingsFilterView({
                 key={tGroup.id}
                 type="button"
                 onClick={() => setActiveTab(tGroup.id)}
-                className={`rounded-lg px-4 py-2 text-sm font-semibold transition-all ${
+                className={`shrink-0 rounded-lg px-4 py-2 text-sm font-semibold transition-all min-h-[40px] flex items-center ${
                   active
                     ? "bg-[var(--accent)] text-white shadow-md"
                     : "bg-[var(--muted)] text-[var(--muted-foreground)] hover:bg-[color-mix(in_oklab,var(--foreground)_8%,var(--muted))] hover:text-[var(--foreground)]"
                 }`}
               >
-                {tGroup.name}
+                <span>{tGroup.name}</span>
                 {tGroup.isAnnual && (
                   <span className="ml-1.5 rounded bg-amber-400/20 px-1.5 py-0.5 text-[10px] font-bold text-amber-500">
                     {t("copasBadge")}
@@ -233,7 +236,7 @@ export function StandingsFilterView({
               </button>
             );
           })}
-        </div>
+        </nav>
       )}
 
       {/* Rendered Tournament Tables */}
@@ -247,21 +250,22 @@ export function StandingsFilterView({
 
           return (
             <section key={tourney.id} className="flex flex-col gap-4">
-              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between border-b border-[var(--border)] pb-2">
+              {/* Tournament Title & Subgroup Selector */}
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between border-b border-[var(--border)] pb-3">
                 <div className="flex items-center gap-3">
-                  <h2 className="font-display text-xl font-bold tracking-tight text-[var(--foreground)]">
+                  <h2 className="font-display text-xl sm:text-2xl font-bold tracking-tight text-[var(--foreground)]">
                     {tourney.name}
                   </h2>
                   {tourney.isAnnual && (
-                    <span className="text-xs font-semibold text-[var(--oro-500)] uppercase tracking-wider">
+                    <span className="text-xs font-semibold text-[var(--oro-500)] uppercase tracking-wider hidden sm:inline">
                       {t("qualificationSubtitle")}
                     </span>
                   )}
                 </div>
 
-                {/* Subgroup Pill Filters (e.g. Todas, Tabla General, Zona A, Zona B) */}
+                {/* Subgroup Filter Buttons (Scrollable on small screens) */}
                 {tourney.subgroups.length > 1 && (
-                  <div className="flex flex-wrap items-center gap-1.5">
+                  <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar scroll-smooth touch-pan-x pb-1 sm:pb-0">
                     <button
                       type="button"
                       onClick={() =>
@@ -270,7 +274,7 @@ export function StandingsFilterView({
                           [tourney.id]: "all",
                         }))
                       }
-                      className={`rounded-md px-2.5 py-1 text-xs font-medium transition-colors ${
+                      className={`shrink-0 rounded-md px-2.5 py-1.5 text-xs font-medium transition-colors min-h-[32px] ${
                         currentSubKey === "all"
                           ? "bg-[var(--foreground)] text-[var(--background)] font-semibold"
                           : "bg-[var(--muted)] text-[var(--muted-foreground)] hover:text-[var(--foreground)]"
@@ -290,15 +294,15 @@ export function StandingsFilterView({
                               [tourney.id]: sub.groupName,
                             }))
                           }
-                          className={`rounded-md px-2.5 py-1 text-xs font-medium transition-colors ${
+                          className={`shrink-0 rounded-md px-2.5 py-1.5 text-xs font-medium transition-colors min-h-[32px] flex items-center ${
                             isSelected
                               ? "bg-[var(--accent)] text-white font-semibold shadow-xs"
                               : "bg-[var(--muted)] text-[var(--muted-foreground)] hover:text-[var(--foreground)]"
                           }`}
                         >
-                          {sub.groupName}
+                          <span>{sub.groupName}</span>
                           {sub.isGeneral && (
-                            <span className="ml-1 text-[10px] opacity-80">★</span>
+                            <span className="ml-1 text-[10px] opacity-90">★</span>
                           )}
                         </button>
                       );
@@ -307,12 +311,13 @@ export function StandingsFilterView({
                 )}
               </div>
 
-              <div className="flex flex-col gap-6">
+              {/* Subgroup Tables */}
+              <div className="flex flex-col gap-8">
                 {visibleSubgroups.map((sub) => (
                   <div key={sub.groupName} className="flex flex-col gap-2">
                     {tourney.subgroups.length > 1 && (
                       <div className="flex items-center justify-between">
-                        <h3 className="font-display text-sm font-semibold text-[var(--accent)] uppercase tracking-wider">
+                        <h3 className="font-display text-sm sm:text-base font-semibold text-[var(--accent)] uppercase tracking-wider">
                           {sub.groupName}
                         </h3>
                         {sub.isGeneral && (
@@ -327,6 +332,7 @@ export function StandingsFilterView({
                       bocaTeamId={bocaTeamId}
                       isAnnualTable={tourney.isAnnual || sub.isGeneral}
                       locale={locale}
+                      captionTitle={`${tourney.name} - ${sub.groupName}`}
                     />
                   </div>
                 ))}
@@ -337,4 +343,4 @@ export function StandingsFilterView({
       </div>
     </div>
   );
-}
+});
