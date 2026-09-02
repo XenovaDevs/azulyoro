@@ -157,18 +157,18 @@ export function StandingsTable({
       {/* Qualification Legend for annual table or international spots */}
       {isAnnualTable && (
         <div className="flex flex-wrap items-center gap-4 rounded-lg bg-[var(--muted)] px-3 py-2 text-xs text-[var(--muted-foreground)]">
-          <span className="font-semibold text-[var(--foreground)]">{isEs ? "Clasificación:" : "Qualification:"}</span>
+          <span className="font-semibold text-[var(--foreground)]">{t("qualification")}</span>
           <span className="inline-flex items-center gap-1.5">
             <span className="h-3 w-3 rounded-full bg-emerald-500 inline-block" />
-            <span>{isEs ? "1° - 3° Copa Libertadores" : "1st - 3rd Copa Libertadores"}</span>
+            <span>{t("libertadores")}</span>
           </span>
           <span className="inline-flex items-center gap-1.5">
             <span className="h-3 w-3 rounded-full bg-sky-500 inline-block" />
-            <span>{isEs ? "4° - 9° Copa Sudamericana" : "4th - 9th Copa Sudamericana"}</span>
+            <span>{t("sudamericana")}</span>
           </span>
           <span className="inline-flex items-center gap-1.5">
             <span className="h-3 w-3 rounded-full bg-rose-500 inline-block" />
-            <span>{isEs ? "Descenso" : "Relegation"}</span>
+            <span>{t("relegation")}</span>
           </span>
         </div>
       )}

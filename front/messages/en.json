@@ -112,7 +112,17 @@
     "goalsAgainst": "GA",
     "goalsDiff": "GD",
     "points": "Pts",
-    "form": "Form"
+    "form": "Form",
+    "allTournaments": "All Tournaments",
+    "allTables": "All tables",
+    "generalTable": "General Table",
+    "annualTable": "Annual Table",
+    "qualification": "Qualification:",
+    "libertadores": "1st - 3rd Copa Libertadores",
+    "sudamericana": "4th - 9th Copa Sudamericana",
+    "relegation": "Relegation",
+    "copasBadge": "Cups 2026",
+    "qualificationSubtitle": "Libertadores & Sudamericana spots"
   },
   "Player": {
     "metaTitle": "{name} — Profile and stats",
