@@ -6,7 +6,8 @@
 - [x] Publicar contratos de temporada, fases, resultados, penales y fecha de actualización.
 - [x] Mostrar competiciones, grupos, eliminatorias, resultados y próximos encuentros en la interfaz bilingüe, con actualización automática.
 - [x] Verificar pruebas de regresión, build/lint y navegación real; revisar el diff y documentar limitaciones comprobadas.
-- [ ] Publicar por el flujo Git del proyecto y verificar el despliegue real.
+- [x] Publicar por el flujo Git del proyecto y verificar el despliegue real.
+- [ ] Completar la carga real de otros equipos y tablas internacionales en producción; revisar logs del sincronizador en el VPS (acceso solicitado).
 
 ## Criterios
 
@@ -25,3 +26,7 @@ Revisión final: paginación estable por fecha e ID externo para partidos simult
 Navegador Chrome, escritorio/móvil y rutas es/en: cada zona de Clausura tiene 15 equipos distintos; Boca muestra 11 puntos/8 PJ y la anual 41 puntos/24 PJ. Selector de Copa Argentina muestra fixtures de otros equipos y penales; el detalle de esos encuentros responde 200. Se corrigió también un error de hidratación causado por espacios Unicode del formateo de fechas. Última carga es/en sin errores de consola.
 
 La verificación visual utiliza un backend aislado en memoria con una copia de datos públicos (52 fixtures y 60 filas) y un único encuentro sintético claramente identificado para probar penales; no modifica datos reales. La cobertura completa de otros equipos requiere la primera sincronización del proveedor tras desplegar. Una clave local respondió 403; esa respuesta no se tomó como evidencia del estado del proveedor en producción. Los fallos del proveedor conservan datos y quedan registrados.
+
+Producción: commit de código `a367af8` publicado en main. GitHub Actions `33996517881` terminó en success. `/es/posiciones` responde 200 y muestra Clausura con dos zonas de 15 equipos, Boca 11 puntos/8 PJ; la anual muestra 41 puntos/24 PJ. Consola del navegador sin errores. Los selectores muestran Liga, Libertadores, Sudamericana, Copa Argentina y amistosos para 2026.
+
+Pendiente comprobado tras desplegar: el overview 2026 aún devuelve sólo los fixtures antiguos de Boca (Liga 33, Libertadores 6, Sudamericana 6, Copa Argentina 4), cero encuentros de otros equipos y ninguna tabla internacional. No se afirma que la carga completa esté funcionando en producción. El dashboard Hangfire responde 401; falta acceso a logs del VPS para identificar la causa real de la ingestión pendiente. La corrección de posiciones está verificada; la cobertura completa de datos sigue abierta.
