@@ -12,6 +12,7 @@ public interface ISportsSyncService
 {
     Task SyncStaticAsync(CancellationToken ct);
     Task SyncSemiAsync(CancellationToken ct);
+    Task SyncCompetitionStandingsAsync(int competitionExtId, int seasonYear, CancellationToken ct);
 }
 
 /// <summary>
@@ -128,30 +129,91 @@ public sealed class SportsSyncService(
     public async Task SyncSemiAsync(CancellationToken ct)
     {
         ValidateOptions();
+        var fetchedAt = DateTime.UtcNow;
+        var failures = new List<Exception>();
+        var fixtureResponse = new ApiFootballResponse<ApiFixtureSyncItem>();
+        try
+        {
+            fixtureResponse = await api.GetAsync<ApiFixtureSyncItem>("fixtures",
+                new Dictionary<string, string?>
+                {
+                    ["team"] = options.TeamExtId.ToString(), ["season"] = options.Season.ToString(),
+                }, ct);
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            failures.Add(ex);
+            logger.LogWarning(ex, "Tracked fixture discovery failed; using stored competitions.");
+        }
 
-        var fixtureResponse = await api.GetAsync<ApiFixtureSyncItem>(
-            "fixtures",
-            new Dictionary<string, string?>
+        var competitionIds = fixtureResponse.Response.Select(f => f.League.Id)
+            .Concat(await db.Fixtures.Where(f => f.IsBoca && f.Season!.Year == options.Season)
+                .Select(f => f.Competition!.ExtId).Distinct().ToListAsync(ct))
+            .Where(id => id > 0).Distinct().ToHashSet();
+        var metadata = new List<ApiCompetitionItem>();
+        try
+        {
+            var leagues = await api.GetAsync<ApiCompetitionItem>("leagues",
+                new Dictionary<string, string?>
+                {
+                    ["team"] = options.TeamExtId.ToString(), ["season"] = options.Season.ToString(),
+                }, ct);
+            metadata.AddRange(leagues.Response);
+            foreach (var item in metadata) item.League.Country = item.Country.Name;
+            competitionIds.UnionWith(metadata.Select(c => c.League.Id).Where(id => id > 0));
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            failures.Add(ex);
+            logger.LogWarning(ex, "Competition discovery failed; using tracked fixtures.");
+        }
+
+        var allFixtures = fixtureResponse.Response.Where(f => f.Fixture.Id > 0)
+            .DistinctBy(f => f.Fixture.Id).ToDictionary(f => f.Fixture.Id);
+        var standings = new List<ApiStandingResponseItem>();
+        foreach (var competitionId in competitionIds)
+        {
+            try
             {
-                ["team"] = options.TeamExtId.ToString(),
-                ["season"] = options.Season.ToString(),
-            },
-            ct);
-        var standingResponse = await api.GetAsync<ApiStandingResponseItem>(
-            "standings",
-            new Dictionary<string, string?>
+                var response = await api.GetAsync<ApiFixtureSyncItem>("fixtures",
+                    new Dictionary<string, string?>
+                    {
+                        ["league"] = competitionId.ToString(), ["season"] = options.Season.ToString(),
+                    }, ct);
+                foreach (var item in response.Response.Where(f => f.League.Id == competitionId &&
+                    (f.League.Season is null || f.League.Season == options.Season)))
+                    allFixtures[item.Fixture.Id] = item;
+            }
+            catch (Exception ex) when (ex is not OperationCanceledException)
             {
-                ["league"] = options.PrimaryLeagueExtId.ToString(),
-                ["season"] = options.Season.ToString(),
-            },
-            ct);
+                failures.Add(ex);
+                logger.LogWarning(ex, "Fixture sync failed for competition {Competition}; retaining stored fixtures.", competitionId);
+            }
+
+            var supportsStandings = metadata.FirstOrDefault(c => c.League.Id == competitionId)?
+                .Seasons.FirstOrDefault(s => s.Year == options.Season)?.Coverage.Standings;
+            if (supportsStandings == false) continue;
+            try
+            {
+                var response = await FetchStandingsAsync(competitionId, options.Season, ct);
+                standings.AddRange(response.Response.Where(p => p.League.Id == competitionId));
+            }
+            catch (Exception ex) when (ex is not OperationCanceledException)
+            {
+                failures.Add(ex);
+                logger.LogWarning(ex, "Standings sync failed for competition {Competition}; retaining stored standings.", competitionId);
+            }
+        }
 
         var seasons = await db.Seasons.ToDictionaryAsync(s => s.Year, ct);
         var competitions = await db.Competitions.ToDictionaryAsync(c => c.ExtId, ct);
         var teams = await db.Teams.ToDictionaryAsync(t => t.ExtId, ct);
         var season = GetOrCreateSeason(seasons);
 
-        var fixtureIds = fixtureResponse.Response
+        foreach (var item in metadata)
+            UpsertCompetition(competitions, item.League);
+
+        var fixtureIds = allFixtures.Values
             .Select(f => f.Fixture.Id)
             .Where(id => id > 0)
             .Distinct()
@@ -160,7 +222,7 @@ public sealed class SportsSyncService(
             .Where(f => fixtureIds.Contains(f.ExtId))
             .ToDictionaryAsync(f => f.ExtId, ct);
 
-        foreach (var item in fixtureResponse.Response)
+        foreach (var item in allFixtures.Values)
         {
             if (item.Fixture.Id <= 0 || item.Fixture.Date is null ||
                 item.Teams.Home.Id is null || item.Teams.Away.Id is null ||
@@ -180,11 +242,16 @@ public sealed class SportsSyncService(
                 fixtures[item.Fixture.Id] = fixture;
             }
 
+            // A live poll may have saved a newer score while this season-wide request was in flight.
+            if (fixture.LastSyncedAt > fetchedAt) continue;
+            var status = FixtureStatusExtensions.FromApiShort(item.Fixture.Status.Short);
+            if (fixture.Status == FixtureStatus.Finished && status != FixtureStatus.Finished) continue;
+
             fixture.CompetitionId = competition.Id;
             fixture.SeasonId = season.Id;
             fixture.Round = item.League.Round;
             fixture.DateUtc = item.Fixture.Date.Value.UtcDateTime;
-            fixture.Status = FixtureStatusExtensions.FromApiShort(item.Fixture.Status.Short);
+            fixture.Status = status;
             fixture.Elapsed = item.Fixture.Status.Elapsed;
             fixture.VenueName = item.Fixture.Venue.Name;
             fixture.HomeTeamId = home.Id;
@@ -195,13 +262,17 @@ public sealed class SportsSyncService(
             fixture.HtAway = item.Score.Halftime.Away;
             fixture.FtHome = item.Score.Fulltime.Home;
             fixture.FtAway = item.Score.Fulltime.Away;
+            fixture.ExtraTimeHome = item.Score.Extratime.Home;
+            fixture.ExtraTimeAway = item.Score.Extratime.Away;
+            fixture.PenaltyHome = item.Score.Penalty.Home;
+            fixture.PenaltyAway = item.Score.Penalty.Away;
             fixture.IsBoca = item.Teams.Home.Id == options.TeamExtId ||
                 item.Teams.Away.Id == options.TeamExtId;
             fixture.LastSyncedAt = DateTime.UtcNow;
         }
 
         await UpsertStandingsAsync(
-            standingResponse.Response,
+            standings,
             season,
             competitions,
             teams,
@@ -210,7 +281,26 @@ public sealed class SportsSyncService(
         await db.SaveChangesAsync(ct);
         logger.LogInformation(
             "Sports semi sync completed for team {TeamExtId}, season {Season}: {FixtureCount} fixtures.",
-            options.TeamExtId, options.Season, fixtureResponse.Response.Count);
+            options.TeamExtId, options.Season, allFixtures.Count);
+        if (failures.Count > 0)
+            throw new AggregateException("Sports sync saved available updates but some provider requests failed.", failures);
+    }
+
+    private Task<ApiFootballResponse<ApiStandingResponseItem>> FetchStandingsAsync(
+        int competitionExtId, int seasonYear, CancellationToken ct) =>
+        api.GetAsync<ApiStandingResponseItem>("standings", new Dictionary<string, string?>
+        {
+            ["league"] = competitionExtId.ToString(), ["season"] = seasonYear.ToString(),
+        }, ct);
+
+    public async Task SyncCompetitionStandingsAsync(int competitionExtId, int seasonYear, CancellationToken ct)
+    {
+        var response = await FetchStandingsAsync(competitionExtId, seasonYear, ct);
+        var season = await db.Seasons.SingleAsync(s => s.Year == seasonYear, ct);
+        await UpsertStandingsAsync(response.Response.Where(p => p.League.Id == competitionExtId).ToList(),
+            season, await db.Competitions.ToDictionaryAsync(c => c.ExtId, ct),
+            await db.Teams.ToDictionaryAsync(t => t.ExtId, ct), ct);
+        await db.SaveChangesAsync(ct);
     }
 
     private async Task<List<ApiPlayerItem>> GetAllPlayersAsync(CancellationToken ct)
@@ -246,20 +336,22 @@ public sealed class SportsSyncService(
         Dictionary<int, Team> teams,
         CancellationToken ct)
     {
-        var payload = payloads.FirstOrDefault(p => p.League.Id == options.PrimaryLeagueExtId);
-        if (payload is null)
+        foreach (var payload in payloads.Where(p => p.League.Id > 0 && p.League.Season == season.Year))
         {
-            throw new InvalidOperationException(
-                $"API-Football returned no standings for league {options.PrimaryLeagueExtId}.");
+            await UpsertCompetitionStandingsAsync(payload, season, competitions, teams, ct);
         }
+    }
 
+    private async Task UpsertCompetitionStandingsAsync(
+        ApiStandingResponseItem payload, Season season,
+        Dictionary<int, Competition> competitions, Dictionary<int, Team> teams, CancellationToken ct)
+    {
         var competition = UpsertCompetition(competitions, new ApiLeague
         {
             Id = payload.League.Id,
             Name = payload.League.Name,
             Country = payload.League.Country,
             Logo = payload.League.Logo,
-            Type = "League",
             Season = payload.League.Season,
         });
 
@@ -267,7 +359,6 @@ public sealed class SportsSyncService(
         var existing = await db.Standings
             .Where(s => s.CompetitionId == competition.Id && s.SeasonId == season.Id)
             .ToListAsync(ct);
-        var seen = new HashSet<(Guid TeamId, string Group)>();
 
         foreach (var row in rows)
         {
@@ -293,6 +384,12 @@ public sealed class SportsSyncService(
                 existing.Add(standing);
             }
 
+            // Provider tables can lag behind fixtures or arrive out of order.
+            // Never replace a newer official snapshot with an older one.
+            if (standing.SourceUpdatedAtUtc is not null &&
+                (row.Update is null || row.Update.Value.UtcDateTime < standing.SourceUpdatedAtUtc))
+                continue;
+
             standing.Rank = row.Rank;
             standing.Points = row.Points;
             standing.Played = row.All.Played;
@@ -303,11 +400,8 @@ public sealed class SportsSyncService(
             standing.GoalsAgainst = row.All.Goals.Against;
             standing.GoalsDiff = row.GoalsDiff;
             standing.Form = row.Form;
-            seen.Add((team.Id, group));
+            standing.SourceUpdatedAtUtc = row.Update?.UtcDateTime;
         }
-
-        var stale = existing.Where(s => !seen.Contains((s.TeamId, s.GroupName))).ToList();
-        db.Standings.RemoveRange(stale);
     }
 
     private Season GetOrCreateSeason(Dictionary<int, Season> seasons)
@@ -384,9 +478,9 @@ public sealed class SportsSyncService(
         competition.Name = source.Name ?? competition.Name;
         competition.Country = source.Country ?? competition.Country;
         competition.LogoUrl = source.Logo ?? competition.LogoUrl;
-        competition.Type = source.Type?.Equals("Cup", StringComparison.OrdinalIgnoreCase) == true
-            ? CompetitionType.Cup
-            : CompetitionType.League;
+        if (source.Type is not null)
+            competition.Type = source.Type.Equals("Cup", StringComparison.OrdinalIgnoreCase)
+                ? CompetitionType.Cup : CompetitionType.League;
         return competition;
     }
 

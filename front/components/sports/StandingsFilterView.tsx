@@ -1,346 +1,112 @@
 "use client";
 
-import { memo, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
-import type { StandingDto } from "@/lib/api/types";
+import type { CompetitionOverviewDto } from "@/lib/api/types";
+import { aggregateTies, fixtureGroups, fixturePhase, isKnockoutRound, latestPhase, standingGroups } from "@/lib/competitions";
+import { classifyStatus } from "@/lib/matchStatus";
 import { StandingsTable } from "./StandingsTable";
+import { MatchCard } from "./MatchCard";
+import { EmptyState } from "@/components/ui/EmptyState";
 
-interface StandingsFilterViewProps {
-  standings: StandingDto[];
-  locale?: string;
-  bocaTeamId?: string;
-}
-
-interface SubgroupData {
-  groupName: string;
-  isGeneral: boolean;
-  rows: StandingDto[];
-}
-
-interface TournamentGroup {
-  id: string;
-  name: string;
-  isAnnual: boolean;
-  subgroups: SubgroupData[];
-}
-
-function normalizeGroupName(raw: string, isEs: boolean): string {
-  if (!raw) return isEs ? "Tabla General" : "General Table";
-  const lower = raw.toLowerCase();
-
-  if (lower.includes("aggregate") || lower.includes("general")) {
-    return isEs ? "Tabla General" : "General Table";
-  }
-  if (lower.includes("anual") || lower.includes("annual")) {
-    return isEs ? "Tabla Anual" : "Annual Table";
-  }
-  if (lower.includes("group a") || lower.includes("grupo a") || lower.includes("zona a")) {
-    return isEs ? "Zona A" : "Group A";
-  }
-  if (lower.includes("group b") || lower.includes("grupo b") || lower.includes("zona b")) {
-    return isEs ? "Zona B" : "Group B";
-  }
-  if (lower.includes("group c") || lower.includes("grupo c") || lower.includes("zona c")) {
-    return isEs ? "Zona C" : "Group C";
-  }
-  if (lower.includes("group d") || lower.includes("grupo d") || lower.includes("zona d")) {
-    return isEs ? "Zona D" : "Group D";
-  }
-
-  return raw;
-}
-
-function isGeneralOrAnnual(name: string): boolean {
-  const l = name.toLowerCase();
-  return (
-    l.includes("general") ||
-    l.includes("anual") ||
-    l.includes("annual") ||
-    l.includes("aggregate")
-  );
-}
-
-export const StandingsFilterView = memo(function StandingsFilterView({
-  standings,
-  locale = "es",
-  bocaTeamId,
-}: StandingsFilterViewProps) {
+export function StandingsFilterView({ overview, locale }: { overview: CompetitionOverviewDto; locale: string }) {
   const t = useTranslations("Standings");
-  const isEs = locale === "es";
-
-  // Group standings by competition name and groups
-  const tournaments = useMemo(() => {
-    const map = new Map<
-      string,
-      {
-        name: string;
-        isAnnual: boolean;
-        subgroups: Map<string, StandingDto[]>;
-      }
-    >();
-
-    for (const row of standings) {
-      const compName =
-        row.competitionName || row.groupName || (isEs ? "Torneo" : "Tournament");
-      const isAnnual = isGeneralOrAnnual(compName) || isGeneralOrAnnual(row.groupName);
-
-      // Normalize tournament key
-      let key = compName;
-      if (isAnnual) key = isEs ? "Tabla Anual" : "Annual Table";
-
-      let tourney = map.get(key);
-      if (!tourney) {
-        tourney = {
-          name: key,
-          isAnnual,
-          subgroups: new Map<string, StandingDto[]>(),
-        };
-        map.set(key, tourney);
-      }
-
-      const rawSubKey = row.groupName || key;
-      const normalizedSubKey = normalizeGroupName(rawSubKey, isEs);
-      const subRows = tourney.subgroups.get(normalizedSubKey) ?? [];
-      subRows.push({ ...row, groupName: normalizedSubKey });
-      tourney.subgroups.set(normalizedSubKey, subRows);
+  const [phase, setPhase] = useState(() => latestPhase(overview.fixtures, overview.standings, overview.competition.type));
+  const [stage, setStage] = useState("all");
+  const [status, setStatus] = useState("all");
+  const [round, setRound] = useState("all");
+  const [bocaOnly, setBocaOnly] = useState(false);
+  const [visible, setVisible] = useState(30);
+  const phases = [...new Set([
+    ...overview.standings.map((row) => row.phase),
+    ...overview.fixtures.map((match) => fixturePhase(match.round, overview.competition.type)),
+  ])].filter(Boolean);
+  const phaseLabel = (value: string) => {
+    switch (value) {
+      case "apertura": return "Apertura";
+      case "clausura": return "Clausura";
+      case "annual": return t("annualTable");
+      case "groups": return t("groupStage");
+      case "playoffs": return t("playoffs");
+      case "league": return t("regularSeason");
+      default: return value;
     }
-
-    const list: TournamentGroup[] = [];
-    for (const [id, data] of map.entries()) {
-      const subgroupsList: SubgroupData[] = Array.from(data.subgroups.entries()).map(
-        ([groupName, rows]) => ({
-          groupName,
-          isGeneral: isGeneralOrAnnual(groupName),
-          rows: rows.sort((a, b) => a.rank - b.rank),
-        })
-      );
-
-      // Check if there is already a General/Annual table
-      const hasGeneral = subgroupsList.some((s) => s.isGeneral);
-
-      // If there are 2 or more zone groups and no general table, synthesize "Tabla General"
-      if (!hasGeneral && subgroupsList.length >= 2) {
-        const teamMap = new Map<string, StandingDto>();
-
-        for (const sub of subgroupsList) {
-          for (const r of sub.rows) {
-            const teamKey = r.teamId || r.teamName || "";
-            const existing = teamMap.get(teamKey);
-            if (!existing) {
-              teamMap.set(teamKey, { ...r });
-            } else {
-              // Merge stats if team appears in multiple phases
-              teamMap.set(teamKey, {
-                ...existing,
-                played: existing.played + r.played,
-                win: existing.win + r.win,
-                draw: existing.draw + r.draw,
-                lose: existing.lose + r.lose,
-                goalsFor: existing.goalsFor + r.goalsFor,
-                goalsAgainst: existing.goalsAgainst + r.goalsAgainst,
-                goalsDiff: existing.goalsDiff + r.goalsDiff,
-                points: existing.points + r.points,
-              });
-            }
-          }
-        }
-
-        const generalRows: StandingDto[] = Array.from(teamMap.values())
-          .sort((a, b) => {
-            if (b.points !== a.points) return b.points - a.points;
-            if (b.goalsDiff !== a.goalsDiff) return b.goalsDiff - a.goalsDiff;
-            if (b.goalsFor !== a.goalsFor) return b.goalsFor - a.goalsFor;
-            if (b.win !== a.win) return b.win - a.win;
-            return (a.teamName ?? "").localeCompare(b.teamName ?? "");
-          })
-          .map((row, idx) => ({
-            ...row,
-            rank: idx + 1,
-            groupName: isEs ? "Tabla General" : "General Table",
-          }));
-
-        subgroupsList.unshift({
-          groupName: isEs ? "Tabla General" : "General Table",
-          isGeneral: true,
-          rows: generalRows,
-        });
-      }
-
-      list.push({
-        id,
-        name: data.name,
-        isAnnual: data.isAnnual,
-        subgroups: subgroupsList,
-      });
-    }
-
-    // Sort order: Liga Profesional first, then Tabla Anual, then Copa Sudamericana / International, then rest
-    return list.sort((a, b) => {
-      const aLower = a.name.toLowerCase();
-      const bLower = b.name.toLowerCase();
-      if (aLower.includes("liga") && !bLower.includes("liga")) return -1;
-      if (!aLower.includes("liga") && bLower.includes("liga")) return 1;
-      if (a.isAnnual && !b.isAnnual) return -1;
-      if (!a.isAnnual && b.isAnnual) return 1;
-      return a.name.localeCompare(b.name);
-    });
-  }, [standings, isEs]);
-
-  const [activeTab, setActiveTab] = useState<string>("all");
-  const [selectedSubgroup, setSelectedSubgroup] = useState<Record<string, string>>({});
-
-  const visibleTournaments = useMemo(() => {
-    if (activeTab === "all") return tournaments;
-    return tournaments.filter((t) => t.id === activeTab);
-  }, [tournaments, activeTab]);
+  };
+  const tables = useMemo(() => standingGroups(overview.standings.filter((row) => phase === "all" || row.phase === phase)), [overview.standings, phase]);
+  const fixtures = useMemo(() => overview.fixtures.filter((match) => {
+    const matchPhase = fixturePhase(match.round, overview.competition.type);
+    if (phase === "annual") {
+      if (!["apertura", "clausura"].includes(matchPhase) || isKnockoutRound(match.round, overview.competition.type)) return false;
+    } else if (phase !== "all" && matchPhase !== phase) return false;
+    if (stage === "playoffs" && !isKnockoutRound(match.round, overview.competition.type)) return false;
+    if (stage === "groups" && isKnockoutRound(match.round, overview.competition.type)) return false;
+    return !bocaOnly || match.isBoca;
+  }).sort((a, b) => Date.parse(a.dateUtc) - Date.parse(b.dateUtc)), [overview.fixtures, overview.competition.type, phase, stage, bocaOnly]);
+  const rounds = [...new Set(fixtures.map((match) => match.round).filter((value) => value !== null))];
+  const selectedFixtures = fixtures.filter((match) => (round === "all" || match.round === round)
+    && (status === "all" || classifyStatus(match.status) === status));
+  if (status === "finished") selectedFixtures.reverse();
+  const groups = fixtureGroups(selectedFixtures.slice(0, visible));
+  const selectClass = "rounded-lg border border-[var(--border)] bg-[var(--card)] px-3 py-2 text-sm focus:outline-2 focus:outline-[var(--accent)]";
 
   return (
-    <div className="flex flex-col gap-6 w-full">
-      {/* Tournament Selector Tabs: Horizontal scrollable on small screens */}
-      {tournaments.length > 1 && (
-        <nav
-          aria-label={t("title")}
-          className="flex items-center gap-2 overflow-x-auto no-scrollbar scroll-smooth touch-pan-x border-b border-[var(--border)] pb-3"
-        >
-          <button
-            type="button"
-            onClick={() => setActiveTab("all")}
-            className={`shrink-0 rounded-lg px-4 py-2 text-sm font-semibold transition-all min-h-[40px] ${
-              activeTab === "all"
-                ? "bg-[var(--accent)] text-white shadow-md"
-                : "bg-[var(--muted)] text-[var(--muted-foreground)] hover:bg-[color-mix(in_oklab,var(--foreground)_8%,var(--muted))] hover:text-[var(--foreground)]"
-            }`}
-          >
-            {t("allTournaments")}
+    <div className="flex flex-col gap-7">
+      <div className="flex flex-wrap gap-2" role="group" aria-label={t("phase")}>
+        {["all", ...phases].map((value) => (
+          <button type="button" key={value} aria-pressed={phase === value} onClick={() => { setPhase(value); setStage("all"); setRound("all"); setVisible(30); }}
+            className={`rounded-full border px-4 py-2 text-sm font-semibold transition-colors ${phase === value ? "border-[var(--oro-500)] bg-[var(--oro-500)] text-[var(--azul-900)]" : "border-[var(--border)] hover:border-[var(--accent)]"}`}>
+            {value === "all" ? t("allPhases") : phaseLabel(value)}
           </button>
-
-          {tournaments.map((tGroup) => {
-            const active = activeTab === tGroup.id;
-            return (
-              <button
-                key={tGroup.id}
-                type="button"
-                onClick={() => setActiveTab(tGroup.id)}
-                className={`shrink-0 rounded-lg px-4 py-2 text-sm font-semibold transition-all min-h-[40px] flex items-center ${
-                  active
-                    ? "bg-[var(--accent)] text-white shadow-md"
-                    : "bg-[var(--muted)] text-[var(--muted-foreground)] hover:bg-[color-mix(in_oklab,var(--foreground)_8%,var(--muted))] hover:text-[var(--foreground)]"
-                }`}
-              >
-                <span>{tGroup.name}</span>
-                {tGroup.isAnnual && (
-                  <span className="ml-1.5 rounded bg-amber-400/20 px-1.5 py-0.5 text-[10px] font-bold text-amber-500">
-                    {t("copasBadge")}
-                  </span>
-                )}
-              </button>
-            );
-          })}
-        </nav>
-      )}
-
-      {/* Rendered Tournament Tables */}
-      <div className="flex flex-col gap-10">
-        {visibleTournaments.map((tourney) => {
-          const currentSubKey = selectedSubgroup[tourney.id] ?? "all";
-          const visibleSubgroups =
-            currentSubKey === "all"
-              ? tourney.subgroups
-              : tourney.subgroups.filter((s) => s.groupName === currentSubKey);
-
-          return (
-            <section key={tourney.id} className="flex flex-col gap-4">
-              {/* Tournament Title & Subgroup Selector */}
-              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between border-b border-[var(--border)] pb-3">
-                <div className="flex items-center gap-3">
-                  <h2 className="font-display text-xl sm:text-2xl font-bold tracking-tight text-[var(--foreground)]">
-                    {tourney.name}
-                  </h2>
-                  {tourney.isAnnual && (
-                    <span className="text-xs font-semibold text-[var(--oro-500)] uppercase tracking-wider hidden sm:inline">
-                      {t("qualificationSubtitle")}
-                    </span>
-                  )}
-                </div>
-
-                {/* Subgroup Filter Buttons (Scrollable on small screens) */}
-                {tourney.subgroups.length > 1 && (
-                  <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar scroll-smooth touch-pan-x pb-1 sm:pb-0">
-                    <button
-                      type="button"
-                      onClick={() =>
-                        setSelectedSubgroup((prev) => ({
-                          ...prev,
-                          [tourney.id]: "all",
-                        }))
-                      }
-                      className={`shrink-0 rounded-md px-2.5 py-1.5 text-xs font-medium transition-colors min-h-[32px] ${
-                        currentSubKey === "all"
-                          ? "bg-[var(--foreground)] text-[var(--background)] font-semibold"
-                          : "bg-[var(--muted)] text-[var(--muted-foreground)] hover:text-[var(--foreground)]"
-                      }`}
-                    >
-                      {t("allTables")}
-                    </button>
-                    {tourney.subgroups.map((sub) => {
-                      const isSelected = currentSubKey === sub.groupName;
-                      return (
-                        <button
-                          key={sub.groupName}
-                          type="button"
-                          onClick={() =>
-                            setSelectedSubgroup((prev) => ({
-                              ...prev,
-                              [tourney.id]: sub.groupName,
-                            }))
-                          }
-                          className={`shrink-0 rounded-md px-2.5 py-1.5 text-xs font-medium transition-colors min-h-[32px] flex items-center ${
-                            isSelected
-                              ? "bg-[var(--accent)] text-white font-semibold shadow-xs"
-                              : "bg-[var(--muted)] text-[var(--muted-foreground)] hover:text-[var(--foreground)]"
-                          }`}
-                        >
-                          <span>{sub.groupName}</span>
-                          {sub.isGeneral && (
-                            <span className="ml-1 text-[10px] opacity-90">★</span>
-                          )}
-                        </button>
-                      );
-                    })}
-                  </div>
-                )}
-              </div>
-
-              {/* Subgroup Tables */}
-              <div className="flex flex-col gap-8">
-                {visibleSubgroups.map((sub) => (
-                  <div key={sub.groupName} className="flex flex-col gap-2">
-                    {tourney.subgroups.length > 1 && (
-                      <div className="flex items-center justify-between">
-                        <h3 className="font-display text-sm sm:text-base font-semibold text-[var(--accent)] uppercase tracking-wider">
-                          {sub.groupName}
-                        </h3>
-                        {sub.isGeneral && (
-                          <span className="text-xs font-medium text-[var(--oro-500)]">
-                            {t("qualificationSubtitle")}
-                          </span>
-                        )}
-                      </div>
-                    )}
-                    <StandingsTable
-                      rows={sub.rows}
-                      bocaTeamId={bocaTeamId}
-                      isAnnualTable={tourney.isAnnual || sub.isGeneral}
-                      locale={locale}
-                      captionTitle={`${tourney.name} - ${sub.groupName}`}
-                    />
-                  </div>
-                ))}
-              </div>
-            </section>
-          );
-        })}
+        ))}
       </div>
+
+      {tables.length > 0 && stage !== "playoffs" ? (
+        <section className="flex flex-col gap-6" aria-label={t("title")}>
+          {tables.map((table, index) => (
+            <div key={`${table.name}-${index}`}>
+              <h2 className="mb-3 font-display text-lg font-semibold">{table.name || phaseLabel(table.rows[0]?.phase ?? "league")}</h2>
+              {table.rows.some((row) => row.isProvisional) ? <p className="mb-2 text-xs text-[var(--muted-foreground)]">{t("provisional")}</p> : null}
+              <StandingsTable rows={table.rows} locale={locale} captionTitle={table.name} />
+            </div>
+          ))}
+        </section>
+      ) : <p className="text-sm text-[var(--muted-foreground)]">{t(stage === "playoffs" || phase === "playoffs" || overview.competition.type.toLowerCase() === "cup" ? "knockoutNotice" : "noTableForPhase")}</p>}
+
+      <section className="flex flex-col gap-4" aria-label={t("fixtureTitle")}>
+        <div>
+          <h2 className="font-display text-xl font-semibold">{t("fixtureTitle")}</h2>
+          <p className="mt-1 text-sm text-[var(--muted-foreground)]">{t("fixtureDescription")}</p>
+        </div>
+        <div className="grid gap-3 sm:grid-cols-3">
+          <label className="flex flex-col gap-1 text-xs text-[var(--muted-foreground)]">{t("stage")}
+            <select aria-label={t("stage")} className={selectClass} value={stage} onChange={(event) => { setStage(event.target.value); setRound("all"); setVisible(30); }}>
+              <option value="all">{t("allStages")}</option><option value="groups">{t("regularAndGroups")}</option><option value="playoffs">{t("playoffs")}</option>
+            </select>
+          </label>
+          <label className="flex flex-col gap-1 text-xs text-[var(--muted-foreground)]">{t("round")}
+            <select aria-label={t("round")} className={selectClass} value={round} onChange={(event) => { setRound(event.target.value); setVisible(30); }}>
+              <option value="all">{t("allRounds")}</option>{rounds.map((value) => <option key={value} value={value}>{value}</option>)}
+            </select>
+          </label>
+          <label className="flex flex-col gap-1 text-xs text-[var(--muted-foreground)]">{t("matchStatus")}
+            <select aria-label={t("matchStatus")} className={selectClass} value={status} onChange={(event) => { setStatus(event.target.value); setVisible(30); }}>
+              <option value="all">{t("allMatches")}</option><option value="scheduled">{t("upcoming")}</option><option value="finished">{t("results")}</option><option value="live">{t("live")}</option>
+            </select>
+          </label>
+        </div>
+        <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={bocaOnly} onChange={(event) => { setBocaOnly(event.target.checked); setRound("all"); setVisible(30); }} className="h-4 w-4 accent-[var(--oro-500)]" />{t("bocaOnly")}</label>
+        <p className="text-xs text-[var(--muted-foreground)]" aria-live="polite">{t("matchCount", { shown: Math.min(visible, selectedFixtures.length), total: selectedFixtures.length })}</p>
+        {groups.length ? groups.map((group) => (
+          <div key={group.title}>
+            <h3 className="mb-3 font-display text-sm font-semibold text-[var(--accent)]">{group.title || t("roundPending")}</h3>
+            {isKnockoutRound(group.title, overview.competition.type) ? aggregateTies(overview.fixtures.filter((match) => match.round === group.title && (!bocaOnly || match.isBoca))).map((tie) => (
+              <p key={tie.id} className="mb-3 rounded-lg bg-[var(--muted)] px-3 py-2 text-sm"><span className="font-semibold">{t("aggregate")}:</span> {tie.homeName} {tie.homeGoals} – {tie.awayGoals} {tie.awayName}</p>
+            )) : null}
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">{group.matches.map((match) => <MatchCard key={match.id} match={match} locale={locale} linked />)}</div>
+          </div>
+        )) : <EmptyState title={t("noFixtures")} description={t("noFixturesDescription")} />}
+        {visible < selectedFixtures.length ? <button type="button" onClick={() => setVisible((count) => count + 30)} className="self-center rounded-full border border-[var(--border)] px-5 py-2.5 text-sm font-semibold hover:border-[var(--accent)]">{t("loadMore")}</button> : null}
+      </section>
     </div>
   );
-});
+}

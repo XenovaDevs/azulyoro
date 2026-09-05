@@ -48,13 +48,19 @@ public static class MatchesEndpoints
         DateTime? from = null,
         DateTime? to = null,
         int page = 1,
-        int pageSize = 20)
+        int pageSize = 20,
+        bool bocaOnly = true,
+        int? season = null,
+        string? round = null)
     {
         if (page < 1) page = 1;
         if (pageSize < 1) pageSize = 20;
         if (pageSize > 50) pageSize = 50;
 
-        var query = db.Fixtures.AsNoTracking().Where(f => f.IsBoca);
+        var query = db.Fixtures.AsNoTracking().AsQueryable();
+        if (bocaOnly) query = query.Where(f => f.IsBoca);
+        if (season is { } year) query = query.Where(f => f.Season!.Year == year);
+        if (!string.IsNullOrWhiteSpace(round)) query = query.Where(f => f.Round == round);
 
         bool upcoming = false;
         if (!string.IsNullOrWhiteSpace(status))
@@ -92,15 +98,15 @@ public static class MatchesEndpoints
         if (competitionId is { } cid)
             query = query.Where(f => f.CompetitionId == cid);
         if (from is { } fromUtc)
-            query = query.Where(f => f.DateUtc >= fromUtc);
+            query = query.Where(f => f.DateUtc >= DateTime.SpecifyKind(fromUtc, DateTimeKind.Utc));
         if (to is { } toUtc)
-            query = query.Where(f => f.DateUtc <= toUtc);
+            query = query.Where(f => f.DateUtc <= DateTime.SpecifyKind(toUtc, DateTimeKind.Utc));
 
         var total = await query.CountAsync(ct);
 
         query = upcoming
-            ? query.OrderBy(f => f.DateUtc)
-            : query.OrderByDescending(f => f.DateUtc);
+            ? query.OrderBy(f => f.DateUtc).ThenBy(f => f.ExtId)
+            : query.OrderByDescending(f => f.DateUtc).ThenBy(f => f.ExtId);
 
         var items = await query
             .Skip((page - 1) * pageSize)
@@ -120,10 +126,10 @@ public static class MatchesEndpoints
                 f.AwayTeam.LogoUrl,
                 f.HomeGoals,
                 f.AwayGoals,
-                f.IsBoca))
+                f.IsBoca, f.Round, f.PenaltyHome, f.PenaltyAway, f.LastSyncedAt, f.Season!.Year))
             .ToListAsync(ct);
 
-        CacheControl.SetPublicMaxAge(http, 60);
+        CacheControl.SetNoStore(http);
         return Results.Ok(new PagedResult<MatchDto>(items, page, pageSize, total));
     }
 
@@ -138,7 +144,8 @@ public static class MatchesEndpoints
                 f.CompetitionId, f.Competition!.Name,
                 f.HomeTeamId, f.HomeTeam!.Name, f.HomeTeam.LogoUrl,
                 f.AwayTeamId, f.AwayTeam!.Name, f.AwayTeam.LogoUrl,
-                f.HomeGoals, f.AwayGoals, f.IsBoca))
+                f.HomeGoals, f.AwayGoals, f.IsBoca,
+                f.Round, f.PenaltyHome, f.PenaltyAway, f.LastSyncedAt, f.Season!.Year))
             .FirstOrDefaultAsync(ct);
 
         CacheControl.SetNoStore(http);
@@ -170,7 +177,8 @@ public static class MatchesEndpoints
                     f.CompetitionId, f.Competition!.Name,
                     f.HomeTeamId, f.HomeTeam!.Name, f.HomeTeam.LogoUrl,
                     f.AwayTeamId, f.AwayTeam!.Name, f.AwayTeam.LogoUrl,
-                    f.HomeGoals, f.AwayGoals, f.IsBoca))
+                    f.HomeGoals, f.AwayGoals, f.IsBoca,
+                    f.Round, f.PenaltyHome, f.PenaltyAway, f.LastSyncedAt, f.Season!.Year))
                 .ToListAsync(ct);
         }) ?? [];
 
@@ -320,20 +328,20 @@ public static class MatchesEndpoints
                 f.HomeTeamId, f.HomeTeam!.Name, f.HomeTeam.LogoUrl,
                 f.AwayTeamId, f.AwayTeam!.Name, f.AwayTeam.LogoUrl,
                 f.HomeGoals, f.AwayGoals, f.IsBoca,
-                f.VenueName, f.Round, f.HtHome, f.HtAway, f.FtHome, f.FtAway, f.Elapsed))
+                f.VenueName, f.Round, f.HtHome, f.HtAway, f.FtHome, f.FtAway, f.Elapsed,
+                f.PenaltyHome, f.PenaltyAway))
             .FirstOrDefaultAsync(ct);
 
         if (match is null)
             return Results.NotFound();
 
-        CacheControl.SetPublicMaxAge(http, 60);
+        CacheControl.SetNoStore(http);
         return Results.Ok(match);
     }
 
     private static async Task<IResult> GetEvents(
         HttpContext http,
         AppDbContext db,
-        IFixtureDetailSyncService detailSync,
         Guid id,
         CancellationToken ct)
     {
@@ -345,20 +353,6 @@ public static class MatchesEndpoints
             return Results.NotFound();
 
         var events = await QueryEventsAsync(db, id, ct);
-        if ((events.Count == 0 || events.All(e => e.PlayerName == null)) &&
-            fixture.Status != FixtureStatus.NotStarted &&
-            fixture.ExtId > 0)
-        {
-            try
-            {
-                await detailSync.SyncFixtureDetailAsync(fixture.Id, fixture.ExtId, ct);
-                events = await QueryEventsAsync(db, id, ct);
-            }
-            catch
-            {
-                // Best-effort fallback
-            }
-        }
 
         CacheControl.SetPublicMaxAge(http, 60);
         return Results.Ok(events);
@@ -367,7 +361,6 @@ public static class MatchesEndpoints
     private static async Task<IResult> GetLineups(
         HttpContext http,
         AppDbContext db,
-        IFixtureDetailSyncService detailSync,
         Guid id,
         CancellationToken ct)
     {
@@ -379,20 +372,6 @@ public static class MatchesEndpoints
             return Results.NotFound();
 
         var lineups = await QueryLineupsAsync(db, id, ct);
-        if (lineups.Count == 0 &&
-            fixture.Status != FixtureStatus.NotStarted &&
-            fixture.ExtId > 0)
-        {
-            try
-            {
-                await detailSync.SyncFixtureDetailAsync(fixture.Id, fixture.ExtId, ct);
-                lineups = await QueryLineupsAsync(db, id, ct);
-            }
-            catch
-            {
-                // Best-effort fallback
-            }
-        }
 
         CacheControl.SetPublicMaxAge(http, 60);
         return Results.Ok(lineups);

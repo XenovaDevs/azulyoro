@@ -1,5 +1,6 @@
 using Azulyoro.Api.Common;
 using Azulyoro.Infrastructure.Persistence;
+using Azulyoro.Infrastructure.Sync;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.EntityFrameworkCore;
@@ -22,7 +23,11 @@ public record StandingDto(
     int GoalsAgainst,
     int GoalsDiff,
     string? Form,
-    string GroupName);
+    string GroupName,
+    string Phase,
+    int Season,
+    DateTime? UpdatedAt,
+    bool IsProvisional);
 
 public static class StandingsEndpoints
 {
@@ -38,6 +43,14 @@ public static class StandingsEndpoints
         Guid? competitionId,
         int? season,
         CancellationToken ct)
+    {
+        var rows = await ReadStandingsAsync(db, competitionId, season, ct);
+        CacheControl.SetNoStore(http);
+        return Results.Ok(rows);
+    }
+
+    internal static async Task<IReadOnlyList<StandingDto>> ReadStandingsAsync(
+        AppDbContext db, Guid? competitionId, int? season, CancellationToken ct)
     {
         var query = db.Standings.AsNoTracking().AsQueryable();
 
@@ -59,16 +72,25 @@ public static class StandingsEndpoints
                 .Where(s => s.IsCurrent)
                 .Select(s => (Guid?)s.Id)
                 .FirstOrDefaultAsync(ct);
-            if (currentSeasonId is { } current)
-            {
-                query = query.Where(s => s.SeasonId == current);
-            }
+            query = query.Where(s => s.SeasonId == currentSeasonId);
         }
 
-        var rows = await query
+        var rows = await query.Include(s => s.Team).Include(s => s.Competition)
             .OrderBy(s => s.CompetitionId)
+            .ThenBy(s => s.GroupName)
             .ThenBy(s => s.Rank)
-            .Select(s => new StandingDto(
+            .ToListAsync(ct);
+        var competitionIds = rows.Select(s => s.CompetitionId).Distinct().ToArray();
+        var seasonIdsInRows = rows.Select(s => s.SeasonId).Distinct().ToArray();
+        var fixtures = await db.Fixtures.AsNoTracking()
+            .Where(f => competitionIds.Contains(f.CompetitionId) && seasonIdsInRows.Contains(f.SeasonId))
+            .ToListAsync(ct);
+        var years = await db.Seasons.AsNoTracking().Where(s => seasonIdsInRows.Contains(s.Id))
+            .ToDictionaryAsync(s => s.Id, s => s.Year, ct);
+        return StandingsReconciler.Reconcile(rows, fixtures).Select(result =>
+        {
+            var s = result.Standing;
+            return new StandingDto(
                 s.Rank,
                 s.TeamId,
                 s.Team!.Name,
@@ -84,10 +106,7 @@ public static class StandingsEndpoints
                 s.GoalsAgainst,
                 s.GoalsDiff,
                 s.Form,
-                s.GroupName))
-            .ToListAsync(ct);
-
-        CacheControl.SetPublicMaxAge(http, 300);
-        return Results.Ok(rows);
+                s.GroupName, result.Phase, years[s.SeasonId], result.UpdatedAt, result.IsProvisional);
+        }).ToList();
     }
 }

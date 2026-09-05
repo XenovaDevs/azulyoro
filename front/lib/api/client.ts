@@ -31,6 +31,7 @@ export interface ApiGetOptions {
 
 async function doFetch(path: string, options: ApiGetOptions): Promise<Response> {
   const headers: Record<string, string> = {};
+  const noStore = options.auth || options.revalidate === false;
 
   if (options.auth) {
     // Lazily import to avoid pulling request-scoped APIs into static renders.
@@ -46,9 +47,9 @@ async function doFetch(path: string, options: ApiGetOptions): Promise<Response> 
     headers,
     next: {
       tags: options.tags,
-      revalidate: options.auth ? undefined : (options.revalidate ?? 60),
+      revalidate: noStore ? undefined : (options.revalidate ?? 60),
     },
-    cache: options.auth ? "no-store" : undefined,
+    cache: noStore ? "no-store" : undefined,
   });
 }
 

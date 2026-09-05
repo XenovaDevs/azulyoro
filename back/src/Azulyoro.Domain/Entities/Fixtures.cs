@@ -29,6 +29,10 @@ public class Fixture : Entity
     public int? HtAway { get; set; }
     public int? FtHome { get; set; }
     public int? FtAway { get; set; }
+    public int? ExtraTimeHome { get; set; }
+    public int? ExtraTimeAway { get; set; }
+    public int? PenaltyHome { get; set; }
+    public int? PenaltyAway { get; set; }
 
     /// <summary>True when Boca plays (either side) — powers the (is_boca,date) index.</summary>
     public bool IsBoca { get; set; }

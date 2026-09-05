@@ -13,7 +13,8 @@ namespace Azulyoro.Infrastructure.Sync;
 public class LiveSyncBackgroundService(
     IServiceScopeFactory scopeFactory,
     ILogger<LiveSyncBackgroundService> logger,
-    IOptions<SportsSyncOptions> options)
+    IOptions<SportsSyncOptions> options,
+    ISportsSyncLock? syncLock = null)
     : BackgroundService
 {
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -24,6 +25,8 @@ public class LiveSyncBackgroundService(
         {
             try
             {
+                using var lease = syncLock?.TryAcquire();
+                if (syncLock is not null && lease is null) continue;
                 using var scope = scopeFactory.CreateScope();
                 var sync = scope.ServiceProvider.GetRequiredService<LiveSyncService>();
                 var polled = await sync.PollOnceAsync(stoppingToken);

@@ -29,3 +29,16 @@ export function classifyStatus(status: string): MatchState {
 }
 
 export const isLiveStatus = (status: string) => classifyStatus(status) === "live";
+
+export function statusTranslationKey(status: string) {
+  switch (status.toLowerCase()) {
+    case "cancelled": return "statusCancelled";
+    case "abandoned": return "statusAbandoned";
+    case "postponed": return "statusPostponed";
+    case "suspended": return "statusSuspended";
+    case "interrupted": return "statusInterrupted";
+    case "awarded": case "walkover": return "statusAwarded";
+    case "unknown": case "tobedefined": return "statusToBeDefined";
+    default: return classifyStatus(status) === "finished" ? "statusFinished" : classifyStatus(status) === "live" ? "statusLive" : "statusScheduled";
+  }
+}

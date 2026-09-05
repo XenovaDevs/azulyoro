@@ -2,6 +2,36 @@ using System.Text.Json.Serialization;
 
 namespace Azulyoro.Infrastructure.ApiFootball;
 
+public sealed class ApiCompetitionItem
+{
+    [JsonPropertyName("league")]
+    public ApiLeague League { get; set; } = new();
+    [JsonPropertyName("country")]
+    public ApiCompetitionCountry Country { get; set; } = new();
+    [JsonPropertyName("seasons")]
+    public List<ApiCompetitionSeason> Seasons { get; set; } = [];
+}
+
+public sealed class ApiCompetitionCountry
+{
+    [JsonPropertyName("name")]
+    public string? Name { get; set; }
+}
+
+public sealed class ApiCompetitionSeason
+{
+    [JsonPropertyName("year")]
+    public int Year { get; set; }
+    [JsonPropertyName("coverage")]
+    public ApiCompetitionCoverage Coverage { get; set; } = new();
+}
+
+public sealed class ApiCompetitionCoverage
+{
+    [JsonPropertyName("standings")]
+    public bool? Standings { get; set; }
+}
+
 public sealed class ApiTeamItem
 {
     [JsonPropertyName("team")]
@@ -121,6 +151,12 @@ public sealed class ApiLeague
 
 public sealed class ApiScore
 {
+    [JsonPropertyName("extratime")]
+    public ApiScorePeriod Extratime { get; set; } = new();
+
+    [JsonPropertyName("penalty")]
+    public ApiScorePeriod Penalty { get; set; } = new();
+
     [JsonPropertyName("halftime")]
     public ApiScorePeriod Halftime { get; set; } = new();
 
@@ -166,6 +202,9 @@ public sealed class ApiStandingLeague
 
 public sealed class ApiStandingRow
 {
+    [JsonPropertyName("update")]
+    public DateTimeOffset? Update { get; set; }
+
     [JsonPropertyName("rank")]
     public int Rank { get; set; }
 

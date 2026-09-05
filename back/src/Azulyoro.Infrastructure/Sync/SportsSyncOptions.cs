@@ -20,8 +20,11 @@ public sealed class SportsSyncOptions
     public int LivePollIntervalSeconds { get; set; } = 30;
 
     /// <summary>How far ahead to poll scheduled Boca fixtures for kickoff changes.</summary>
-    public int LiveLookaheadHours { get; set; } = 30;
+    public int LiveLookaheadHours { get; set; } = 1;
 
     /// <summary>How long after kickoff a fixture remains eligible for live polling.</summary>
     public int LiveLookbehindHours { get; set; } = 4;
+
+    public int StandingsRetryIntervalSeconds { get; set; } = 300;
+    public int StandingsRetryWindowHours { get; set; } = 6;
 }

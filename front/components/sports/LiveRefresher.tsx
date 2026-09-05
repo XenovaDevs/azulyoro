@@ -11,8 +11,15 @@ import { useRouter } from "next/navigation";
 export function LiveRefresher({ intervalMs = 30000 }: { intervalMs?: number }) {
   const router = useRouter();
   useEffect(() => {
-    const id = setInterval(() => router.refresh(), intervalMs);
-    return () => clearInterval(id);
+    const refresh = () => {
+      if (document.visibilityState === "visible") router.refresh();
+    };
+    const id = setInterval(refresh, intervalMs);
+    document.addEventListener("visibilitychange", refresh);
+    return () => {
+      clearInterval(id);
+      document.removeEventListener("visibilitychange", refresh);
+    };
   }, [router, intervalMs]);
   return null;
 }

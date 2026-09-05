@@ -13,6 +13,7 @@
 
   <ItemGroup>
     <PackageReference Include="coverlet.collector" Version="6.0.4" />
+    <PackageReference Include="Microsoft.AspNetCore.TestHost" Version="10.0.11" />
     <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="10.0.11" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="10.0.11" />
     <PackageReference Include="Microsoft.Extensions.Http.Resilience" Version="10.9.0" />
@@ -27,6 +28,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\Azulyoro.Infrastructure\Azulyoro.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\src\Azulyoro.Api\Azulyoro.Api.csproj" />
   </ItemGroup>
 
 </Project>

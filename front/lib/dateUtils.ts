@@ -1,5 +1,11 @@
 export const ARGENTINA_TIMEZONE = "America/Argentina/Buenos_Aires";
 
+// Node and browsers may ship different ICU spacing for the same locale.
+// Keep server-rendered kickoff text identical during client hydration.
+function normalizeDateSpacing(value: string): string {
+  return value.replace(/[\u00a0\u202f]/g, " ");
+}
+
 /** Formats a UTC date string into Argentina time by default or specified timezone. */
 export function formatArgentinaDate(
   dateUtc: string | Date,
@@ -9,12 +15,12 @@ export function formatArgentinaDate(
   try {
     const d = typeof dateUtc === "string" ? new Date(dateUtc) : dateUtc;
     if (isNaN(d.getTime())) return "";
-    return new Intl.DateTimeFormat(locale === "es" ? "es-AR" : "en-US", {
+    return normalizeDateSpacing(new Intl.DateTimeFormat(locale === "es" ? "es-AR" : "en-US", {
       timeZone: ARGENTINA_TIMEZONE,
       ...options,
-    }).format(d);
+    }).format(d));
   } catch {
-    return new Date(dateUtc).toLocaleString(locale);
+    return normalizeDateSpacing(new Date(dateUtc).toLocaleString(locale));
   }
 }
 
@@ -28,12 +34,12 @@ export function formatDateInZone(
   try {
     const d = typeof dateUtc === "string" ? new Date(dateUtc) : dateUtc;
     if (isNaN(d.getTime())) return "";
-    return new Intl.DateTimeFormat(locale === "es" ? "es-AR" : "en-US", {
+    return normalizeDateSpacing(new Intl.DateTimeFormat(locale === "es" ? "es-AR" : "en-US", {
       timeZone: timeZone || ARGENTINA_TIMEZONE,
       ...options,
-    }).format(d);
+    }).format(d));
   } catch {
-    return new Date(dateUtc).toLocaleString(locale);
+    return normalizeDateSpacing(new Date(dateUtc).toLocaleString(locale));
   }
 }
 

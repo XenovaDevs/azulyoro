@@ -5,8 +5,10 @@ import { FixtureList } from "@/components/sports/FixtureList";
 import { Breadcrumbs } from "@/components/sports/Breadcrumbs";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { groupByDay } from "@/lib/matches";
+import { Link } from "@/i18n/navigation";
+import { LiveRefresher } from "@/components/sports/LiveRefresher";
 
-export const revalidate = 300;
+export const revalidate = 0;
 
 export async function generateMetadata({
   params,
@@ -20,20 +22,26 @@ export async function generateMetadata({
 
 export default async function ResultsPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ locale: string }>;
+  searchParams: Promise<{ page?: string }>;
 }) {
   const { locale } = await params;
   setRequestLocale(locale);
   const t = await getTranslations("Matches");
   const tc = await getTranslations("Common");
 
-  const finished = await getMatches({ status: "finished", pageSize: 50 });
+  const query = await searchParams;
+  const requestedPage = Number(query.page);
+  const page = Number.isSafeInteger(requestedPage) && requestedPage > 0 ? requestedPage : 1;
+  const finished = await getMatches({ status: "finished", pageSize: 50, page });
   const items = finished?.items ?? [];
   const groups = groupByDay(items, locale, "desc");
 
   return (
     <main className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-8 px-4 py-10">
+      <LiveRefresher />
       <Breadcrumbs
         items={[
           { label: tc("home"), href: "/" },
@@ -47,6 +55,7 @@ export default async function ResultsPage({
           {t("resultsTitle")}
         </h1>
         <p className="text-[var(--muted-foreground)]">{t("resultsDescription")}</p>
+        <Link href="/posiciones" className="text-sm font-medium text-[var(--accent)] hover:underline">{t("competitions")}</Link>
       </header>
 
       {groups.length > 0 ? (
@@ -54,6 +63,10 @@ export default async function ResultsPage({
       ) : (
         <EmptyState title={t("resultsEmpty")} />
       )}
+      <nav className="flex justify-between gap-4" aria-label={t("resultsTitle")}>
+        {page > 1 ? <Link href={{ pathname: "/partidos/resultados", query: { page: page - 1 } }} className="rounded-full border border-[var(--border)] px-4 py-2 text-sm">{t("previous")}</Link> : <span />}
+        {finished && page * finished.pageSize < finished.total ? <Link href={{ pathname: "/partidos/resultados", query: { page: page + 1 } }} className="rounded-full border border-[var(--border)] px-4 py-2 text-sm">{t("next")}</Link> : null}
+      </nav>
     </main>
   );
 }

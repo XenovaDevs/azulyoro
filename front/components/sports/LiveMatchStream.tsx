@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import type { EventDto, LineupDto, MatchDetailDto, MatchDto, PlayerStatDto } from "@/lib/api/types";
 import { classifyStatus } from "@/lib/matchStatus";
 import { EmptyState } from "@/components/ui/EmptyState";
@@ -64,6 +65,7 @@ export function LiveMatchStream({
   locale = "es",
   labels,
 }: LiveMatchStreamProps) {
+  const router = useRouter();
   const [update, setUpdate] = useState<LiveUpdate>(() => ({
     fixtureId: match.id,
     status: match.status,
@@ -90,6 +92,8 @@ export function LiveMatchStream({
           if (classifyStatus(next.status) === "finished") {
             finished = true;
             source?.close();
+            // Fetch the final detail, including a possible penalty shootout.
+            router.refresh();
           }
         } catch {
           // The stream is public and best-effort; reconnecting handles a bad frame.
@@ -110,7 +114,7 @@ export function LiveMatchStream({
       source?.close();
       if (reconnectTimer) clearTimeout(reconnectTimer);
     };
-  }, [match.id]);
+  }, [match.id, router]);
 
   const state = classifyStatus(update.status);
   const played = state !== "scheduled";
@@ -137,11 +141,11 @@ export function LiveMatchStream({
           </div>
           <div className="px-2 text-center">
             <div className="tabular-nums text-4xl font-bold sm:text-5xl">
-              {played ? `${update.homeGoals ?? 0} : ${update.awayGoals ?? 0}` : "vs"}
+              {played ? `${update.homeGoals ?? "—"} : ${update.awayGoals ?? "—"}` : "vs"}
             </div>
             {played && detail && (detail.htHome != null || detail.htAway != null) && (
               <div className="mt-1 text-xs text-[var(--muted-foreground)]">
-                HT {detail.htHome ?? 0}-{detail.htAway ?? 0}
+                HT {detail.htHome ?? "—"}-{detail.htAway ?? "—"}
               </div>
             )}
           </div>

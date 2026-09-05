@@ -19,7 +19,8 @@ public class LiveSyncService(
     ILogger<LiveSyncService> logger,
     IFixtureDetailSyncService? detailSync = null,
     IOptions<SportsSyncOptions>? options = null,
-    LiveUpdateHub? updates = null)
+    LiveUpdateHub? updates = null,
+    ISportsSyncService? sportsSync = null)
 {
     private readonly LiveUpdateHub updates = updates ?? new();
 
@@ -34,7 +35,7 @@ public class LiveSyncService(
         var live = await db.Fixtures.AsNoTracking()
             .Where(f => f.IsBoca &&
                 f.DateUtc >= now.AddHours(-syncOptions.LiveLookbehindHours) &&
-                f.DateUtc <= now.AddHours(syncOptions.LiveLookaheadHours) &&
+                f.DateUtc <= now.AddHours(Math.Clamp(syncOptions.LiveLookaheadHours, 0, 1)) &&
                 f.Status != FixtureStatus.Finished &&
                 f.Status != FixtureStatus.Cancelled &&
                 f.Status != FixtureStatus.Abandoned &&
@@ -45,10 +46,109 @@ public class LiveSyncService(
 
         foreach (var fixture in live)
         {
-            await SyncFixtureAsync(fixture.Id, fixture.ExtId, ct);
+            try
+            {
+                await SyncFixtureAsync(fixture.Id, fixture.ExtId, ct);
+            }
+            catch (Exception ex) when (ex is not OperationCanceledException)
+            {
+                logger.LogWarning(ex, "Live sync failed for fixture {Fixture}; retrying next tick.", fixture.ExtId);
+            }
         }
 
-        return live.Count;
+        var otherCount = await PollOtherCompetitionFixturesAsync(now, syncOptions, ct);
+        if (sportsSync is not null)
+            await RefreshRecentStandingsAsync(now, syncOptions, ct);
+        return live.Count + otherCount;
+    }
+
+    private async Task<int> PollOtherCompetitionFixturesAsync(DateTime now, SportsSyncOptions syncOptions, CancellationToken ct)
+    {
+        var trackedCompetitions = db.Fixtures.Where(f => f.IsBoca && f.Season!.IsCurrent)
+            .Select(f => f.CompetitionId).Distinct();
+        var fixtures = await db.Fixtures.Where(f => !f.IsBoca && f.Season!.IsCurrent &&
+            trackedCompetitions.Contains(f.CompetitionId) &&
+            f.DateUtc >= now.AddHours(-syncOptions.LiveLookbehindHours) && f.DateUtc <= now.AddMinutes(15) &&
+            f.Status != FixtureStatus.Finished && f.Status != FixtureStatus.Cancelled &&
+            f.Status != FixtureStatus.Abandoned && f.Status != FixtureStatus.Awarded && f.Status != FixtureStatus.WalkOver)
+            .ToListAsync(ct);
+        foreach (var batch in fixtures.Chunk(20))
+        {
+            try
+            {
+                var response = await api.GetAsync<ApiFixtureSyncItem>("fixtures",
+                    new Dictionary<string, string?> { ["ids"] = string.Join("-", batch.Select(f => f.ExtId)) }, ct);
+                foreach (var item in response.Response)
+                {
+                    var fixture = batch.FirstOrDefault(f => f.ExtId == item.Fixture.Id);
+                    if (fixture is null) continue;
+                    fixture.Status = FixtureStatusExtensions.FromApiShort(item.Fixture.Status.Short);
+                    fixture.Elapsed = item.Fixture.Status.Elapsed;
+                    fixture.HomeGoals = item.Goals.Home;
+                    fixture.AwayGoals = item.Goals.Away;
+                    fixture.FtHome = item.Score.Fulltime.Home;
+                    fixture.FtAway = item.Score.Fulltime.Away;
+                    fixture.HtHome = item.Score.Halftime.Home;
+                    fixture.HtAway = item.Score.Halftime.Away;
+                    fixture.ExtraTimeHome = item.Score.Extratime.Home;
+                    fixture.ExtraTimeAway = item.Score.Extratime.Away;
+                    fixture.PenaltyHome = item.Score.Penalty.Home;
+                    fixture.PenaltyAway = item.Score.Penalty.Away;
+                    if (item.Fixture.Date is not null) fixture.DateUtc = item.Fixture.Date.Value.UtcDateTime;
+                    fixture.LastSyncedAt = now;
+                }
+                await db.SaveChangesAsync(ct);
+            }
+            catch (Exception ex) when (ex is not OperationCanceledException)
+            {
+                logger.LogWarning(ex, "Competition live fixture batch failed; retrying next tick.");
+            }
+        }
+        return fixtures.Count;
+    }
+
+    private async Task RefreshRecentStandingsAsync(DateTime now, SportsSyncOptions syncOptions, CancellationToken ct)
+    {
+        var trackedCompetitions = db.Fixtures.Where(f => f.IsBoca && f.Season!.IsCurrent)
+            .Select(f => f.CompetitionId).Distinct();
+        var completed = await db.Fixtures.AsNoTracking()
+            .Where(f => trackedCompetitions.Contains(f.CompetitionId) && f.Status == FixtureStatus.Finished &&
+                f.DateUtc >= now.AddHours(-syncOptions.StandingsRetryWindowHours))
+            .Select(f => new { League = f.Competition!.ExtId, Year = f.Season!.Year, f.LastSyncedAt })
+            .ToListAsync(ct);
+        foreach (var competition in completed.GroupBy(f => new { f.League, f.Year }))
+        {
+            var resource = $"standings:{competition.Key.League}:{competition.Key.Year}";
+            var state = await db.SyncStates.SingleOrDefaultAsync(s => s.Resource == resource, ct);
+            if (state?.LastRunAt > now.AddSeconds(-syncOptions.StandingsRetryIntervalSeconds) &&
+                state.LastRunAt >= competition.Max(f => f.LastSyncedAt)) continue;
+            if (state is null)
+            {
+                state = new SyncState { Resource = resource };
+                db.SyncStates.Add(state);
+            }
+            state.LastRunAt = DateTime.UtcNow;
+            try
+            {
+                await sportsSync!.SyncCompetitionStandingsAsync(competition.Key.League, competition.Key.Year, ct);
+                state.LastOkAt = now;
+                state.LastError = null;
+            }
+            catch (Exception ex) when (ex is not OperationCanceledException)
+            {
+                db.ChangeTracker.Clear();
+                state = await db.SyncStates.SingleOrDefaultAsync(s => s.Resource == resource, ct);
+                if (state is null)
+                {
+                    state = new SyncState { Resource = resource };
+                    db.SyncStates.Add(state);
+                }
+                state.LastRunAt = DateTime.UtcNow;
+                state.LastError = ex.Message.Length > 2000 ? ex.Message[..2000] : ex.Message;
+                logger.LogWarning(ex, "Post-match standings refresh failed for {Competition}; will retry.", competition.Key.League);
+            }
+            await db.SaveChangesAsync(ct);
+        }
     }
 
     /// <summary>
@@ -85,6 +185,15 @@ public class LiveSyncService(
             fixtureToUpdate.Elapsed = item.Fixture.Status.Elapsed;
             fixtureToUpdate.HomeGoals = item.Goals.Home;
             fixtureToUpdate.AwayGoals = item.Goals.Away;
+            if (item.Fixture.Date is not null) fixtureToUpdate.DateUtc = item.Fixture.Date.Value.UtcDateTime;
+            fixtureToUpdate.HtHome = item.Score.Halftime.Home;
+            fixtureToUpdate.HtAway = item.Score.Halftime.Away;
+            fixtureToUpdate.FtHome = item.Score.Fulltime.Home;
+            fixtureToUpdate.FtAway = item.Score.Fulltime.Away;
+            fixtureToUpdate.ExtraTimeHome = item.Score.Extratime.Home;
+            fixtureToUpdate.ExtraTimeAway = item.Score.Extratime.Away;
+            fixtureToUpdate.PenaltyHome = item.Score.Penalty.Home;
+            fixtureToUpdate.PenaltyAway = item.Score.Penalty.Away;
             fixtureToUpdate.LastSyncedAt = DateTime.UtcNow;
 
             for (var seq = 0; seq < item.Events.Count; seq++)

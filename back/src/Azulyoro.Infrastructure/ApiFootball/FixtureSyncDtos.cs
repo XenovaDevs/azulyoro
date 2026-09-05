@@ -5,6 +5,9 @@ namespace Azulyoro.Infrastructure.ApiFootball;
 /// <summary>Subset of the API-Football /fixtures?id= item used by live sync.</summary>
 public class ApiFixtureItem
 {
+    [JsonPropertyName("score")]
+    public ApiScore Score { get; set; } = new();
+
     [JsonPropertyName("fixture")]
     public ApiFixtureCore Fixture { get; set; } = new();
 
@@ -23,6 +26,9 @@ public class ApiFixtureItem
 
 public class ApiFixtureCore
 {
+    [JsonPropertyName("date")]
+    public DateTimeOffset? Date { get; set; }
+
     [JsonPropertyName("id")]
     public int Id { get; set; }
 

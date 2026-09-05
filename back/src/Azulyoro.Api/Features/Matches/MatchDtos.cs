@@ -15,7 +15,12 @@ public record MatchDto(
     string? AwayTeamLogoUrl,
     int? HomeGoals,
     int? AwayGoals,
-    bool IsBoca);
+    bool IsBoca,
+    string? Round = null,
+    int? PenaltyHome = null,
+    int? PenaltyAway = null,
+    DateTime? LastSyncedAt = null,
+    int? Season = null);
 
 public record MatchDetailDto(
     Guid Id,
@@ -39,7 +44,9 @@ public record MatchDetailDto(
     int? HtAway,
     int? FtHome,
     int? FtAway,
-    int? Elapsed);
+    int? Elapsed,
+    int? PenaltyHome = null,
+    int? PenaltyAway = null);
 
 public record EventDto(
     int Minute,

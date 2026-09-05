@@ -1,16 +1,16 @@
 import type { Metadata } from "next";
+import { cache } from "react";
 import { notFound } from "next/navigation";
 import { getTranslations, setRequestLocale } from "next-intl/server";
-import { routing } from "@/i18n/routing";
 import {
-  getMatches,
+  getAllMatches,
   getMatch,
   getMatchEvents,
   getMatchLineups,
   getMatchPlayerStats,
 } from "@/lib/api/sports";
 import { matchSlug } from "@/lib/slug";
-import { classifyStatus } from "@/lib/matchStatus";
+import { classifyStatus, statusTranslationKey } from "@/lib/matchStatus";
 import { siteUrl } from "@/lib/site";
 import { LiveMatchStream } from "@/components/sports/LiveMatchStream";
 import { Breadcrumbs } from "@/components/sports/Breadcrumbs";
@@ -20,7 +20,7 @@ import { MatchEventsList } from "@/components/sports/MatchEventsList";
 import { MatchLineupsView } from "@/components/sports/MatchLineupsView";
 import type { MatchDto } from "@/lib/api/types";
 
-export const revalidate = 30;
+export const revalidate = 0;
 
 function TeamCrest({ name, logoUrl }: { name: string | null; logoUrl: string | null }) {
   return (
@@ -44,17 +44,15 @@ function TeamCrest({ name, logoUrl }: { name: string | null; logoUrl: string | n
   );
 }
 
-async function resolveMatch(slug: string): Promise<MatchDto | null> {
-  const { items } = await getMatches({ pageSize: 50 });
-  return items.find((m) => matchSlug(m) === slug) ?? null;
-}
-
-export async function generateStaticParams() {
-  const { items } = await getMatches({ pageSize: 50 });
-  return routing.locales.flatMap((locale) =>
-    items.map((m) => ({ locale, slug: matchSlug(m) })),
-  );
-}
+const resolveMatch = cache(async (slug: string): Promise<MatchDto | null> => {
+  const date = /-(\d{4}-\d{2}-\d{2})$/.exec(slug)?.[1];
+  if (!date) return null;
+  const from = new Date(`${date}T00:00:00Z`);
+  if (!Number.isFinite(from.getTime()) || from.toISOString().slice(0, 10) !== date) return null;
+  const to = new Date(from.getTime() + 24 * 60 * 60 * 1000 - 1);
+  const items = await getAllMatches({ bocaOnly: false, from: from.toISOString(), to: to.toISOString() });
+  return items.find((match) => matchSlug(match) === slug) ?? null;
+});
 
 export async function generateMetadata({
   params,
@@ -152,7 +150,7 @@ export default async function MatchDetailPage({
       <section className="overflow-hidden rounded-2xl border border-[var(--border)] bg-gradient-to-b from-[var(--azul-900)] to-[var(--card)] p-6 text-[var(--foreground)] shadow-lg">
         <div className="mb-6 flex items-center justify-between gap-2 text-xs font-semibold uppercase tracking-wide">
           <span className="text-[var(--oro-500)]">{match.competitionName}</span>
-          <span className="text-[var(--muted-foreground)]">{t("statusFinished")}</span>
+          <span className="text-[var(--muted-foreground)]">{t(statusTranslationKey(match.status))}</span>
         </div>
 
         <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-4">
@@ -165,13 +163,16 @@ export default async function MatchDetailPage({
 
           <div className="px-2 text-center">
             <div className="tabular-nums text-4xl font-bold sm:text-5xl">
-              {played ? `${match.homeGoals ?? 0} : ${match.awayGoals ?? 0}` : "vs"}
+              {played ? `${match.homeGoals ?? "—"} : ${match.awayGoals ?? "—"}` : "vs"}
             </div>
             {played && detail && (detail.htHome != null || detail.htAway != null) && (
               <div className="mt-1 text-xs text-[var(--muted-foreground)]">
-                HT {detail.htHome ?? 0}-{detail.htAway ?? 0}
+                HT {detail.htHome ?? "—"}-{detail.htAway ?? "—"}
               </div>
             )}
+            {match.penaltyHome != null && match.penaltyAway != null ? (
+              <p className="mt-2 text-sm font-semibold">{t("penalties")}: {match.penaltyHome} – {match.penaltyAway}</p>
+            ) : null}
           </div>
 
           <div className="flex flex-col items-center gap-2 text-center">

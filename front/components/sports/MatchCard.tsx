@@ -1,6 +1,8 @@
-import { getTranslations } from "next-intl/server";
+"use client";
+
+import { useTranslations } from "next-intl";
 import type { MatchDto } from "@/lib/api/types";
-import { classifyStatus } from "@/lib/matchStatus";
+import { classifyStatus, statusTranslationKey } from "@/lib/matchStatus";
 import { matchSlug } from "@/lib/slug";
 import { Link } from "@/i18n/navigation";
 import { LiveScoreBadge } from "./LiveScoreBadge";
@@ -39,7 +41,7 @@ function TeamRow({
       </span>
       <span className="min-w-0 flex-1 truncate text-sm font-medium">{name ?? "—"}</span>
       {showScore && (
-        <span className="tabular-nums text-lg font-bold">{goals ?? 0}</span>
+        <span className="tabular-nums text-lg font-bold">{goals ?? "—"}</span>
       )}
     </div>
   );
@@ -49,7 +51,7 @@ function TeamRow({
  * Match card: team names + logos (fixed-size box to avoid CLS), competition,
  * local AR datetime, score when played, status. Highlights live matches.
  */
-export async function MatchCard({
+export function MatchCard({
   match,
   locale,
   linked = false,
@@ -59,9 +61,10 @@ export async function MatchCard({
   /** Wrap the card in a link to the match detail page. */
   linked?: boolean;
 }) {
-  const t = await getTranslations("Matches");
+  const t = useTranslations("Matches");
   const state = classifyStatus(match.status);
   const showScore = state !== "scheduled";
+  const statusLabel = t(statusTranslationKey(match.status));
 
   const card = (
     <article
@@ -79,7 +82,7 @@ export async function MatchCard({
           <LiveScoreBadge label={t("live")} />
         ) : (
           <span className="shrink-0 text-xs text-[var(--muted-foreground)]">
-            {state === "finished" ? t("statusFinished") : t("statusScheduled")}
+            {statusLabel}
           </span>
         )}
       </div>
@@ -100,7 +103,11 @@ export async function MatchCard({
       </div>
 
       <div className="mt-3 text-xs text-[var(--muted-foreground)]">
+        {match.round ? <p className="mb-1">{match.round}</p> : null}
         <MatchKickoffTime dateUtc={match.dateUtc} locale={locale} variant="short" />
+        {match.penaltyHome != null && match.penaltyAway != null ? (
+          <p className="mt-1">{t("penalties")}: {match.penaltyHome} – {match.penaltyAway}</p>
+        ) : null}
       </div>
     </article>
   );

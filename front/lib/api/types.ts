@@ -24,9 +24,14 @@ export interface MatchDto {
   homeGoals: number | null;
   awayGoals: number | null;
   isBoca: boolean;
+  round: string | null;
+  penaltyHome: number | null;
+  penaltyAway: number | null;
+  lastSyncedAt: string | null;
+  season: number | null;
 }
 
-export interface MatchDetailDto extends MatchDto {
+export interface MatchDetailDto extends Omit<MatchDto, "lastSyncedAt" | "season"> {
   venue: string | null;
   round: string | null;
   htHome: number | null;
@@ -130,6 +135,9 @@ export interface StandingDto {
   goalsDiff: number;
   form: string | null;
   groupName: string;
+  phase: string;
+  updatedAt: string | null;
+  isProvisional: boolean;
 }
 
 export interface CompetitionDto {
@@ -139,6 +147,15 @@ export interface CompetitionDto {
   type: string;
   country: string | null;
   logoUrl: string | null;
+  seasons: number[];
+}
+
+export interface CompetitionOverviewDto {
+  competition: CompetitionDto;
+  season: number;
+  standings: StandingDto[];
+  fixtures: MatchDto[];
+  updatedAt: string | null;
 }
 
 // ── Content (news / rumors / editorials) ────────────────────────────────────

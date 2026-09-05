@@ -37,4 +37,5 @@ public class Standing : Entity
     public int GoalsAgainst { get; set; }
     public string? Form { get; set; }
     public string GroupName { get; set; } = string.Empty;
+    public DateTime? SourceUpdatedAtUtc { get; set; }
 }

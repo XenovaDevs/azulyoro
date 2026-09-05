@@ -79,6 +79,16 @@ public sealed class FixtureDetailSyncService(
         fixture.Elapsed = item.Fixture.Status.Elapsed;
         fixture.HomeGoals = item.Goals.Home;
         fixture.AwayGoals = item.Goals.Away;
+        if (item.Fixture.Date is not null)
+            fixture.DateUtc = item.Fixture.Date.Value.UtcDateTime;
+        fixture.HtHome = item.Score.Halftime.Home;
+        fixture.HtAway = item.Score.Halftime.Away;
+        fixture.FtHome = item.Score.Fulltime.Home;
+        fixture.FtAway = item.Score.Fulltime.Away;
+        fixture.ExtraTimeHome = item.Score.Extratime.Home;
+        fixture.ExtraTimeAway = item.Score.Extratime.Away;
+        fixture.PenaltyHome = item.Score.Penalty.Home;
+        fixture.PenaltyAway = item.Score.Penalty.Away;
         fixture.LastSyncedAt = DateTime.UtcNow;
 
         var eventCount = UpsertEvents(fixture, item, teamsByExt, playersByExt);
