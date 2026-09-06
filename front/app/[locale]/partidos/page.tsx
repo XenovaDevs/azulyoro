@@ -49,16 +49,16 @@ export default async function MatchesPage({
         </h1>
         <p className="text-[var(--muted-foreground)]">{t("description")}</p>
         <div className="mt-1 flex flex-wrap gap-3 text-sm font-medium">
-          <Link href="/posiciones" className="rounded-full border border-[var(--accent)] px-3.5 py-1.5 transition-colors hover:bg-[var(--muted)]">{t("competitions")}</Link>
+          <Link href="/posiciones" className="inline-flex min-h-11 items-center rounded-full border border-[var(--accent)] px-3.5 py-1.5 transition-colors hover:bg-[var(--muted)]">{t("competitions")}</Link>
           <Link
             href="/partidos/resultados"
-            className="rounded-full border border-[var(--border)] px-3.5 py-1.5 transition-colors hover:border-[var(--accent)]"
+            className="inline-flex min-h-11 items-center rounded-full border border-[var(--border)] px-3.5 py-1.5 transition-colors hover:border-[var(--accent)]"
           >
             {t("seeResults")}
           </Link>
           <Link
             href="/partidos/fixture"
-            className="rounded-full border border-[var(--border)] px-3.5 py-1.5 transition-colors hover:border-[var(--accent)]"
+            className="inline-flex min-h-11 items-center rounded-full border border-[var(--border)] px-3.5 py-1.5 transition-colors hover:border-[var(--accent)]"
           >
             {t("seeFixture")}
           </Link>

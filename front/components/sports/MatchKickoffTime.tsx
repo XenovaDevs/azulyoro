@@ -70,7 +70,7 @@ export function MatchKickoffTime({
             e.stopPropagation();
             setShowUserTz((prev) => !prev);
           }}
-          className="text-[11px] font-medium text-[var(--oro-500)] underline decoration-dotted underline-offset-2 hover:text-[var(--oro-400)] transition-colors"
+          className="inline-flex min-h-11 cursor-pointer items-center rounded px-1 text-xs font-medium text-[var(--accent)] underline decoration-dotted underline-offset-2 hover:text-[var(--foreground)] transition-colors focus-visible:outline-2 focus-visible:outline-[var(--accent)]"
           title={
             showUserTz
               ? "Cambiar a hora de Argentina"

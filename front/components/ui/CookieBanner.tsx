@@ -47,7 +47,7 @@ export function CookieBanner() {
     <div
       role="region"
       aria-label="Cookies"
-      className="fixed inset-x-0 bottom-0 z-50 border-t border-[var(--border)] bg-[color-mix(in_oklab,var(--card)_96%,transparent)] px-4 py-3 backdrop-blur"
+      className="fixed inset-x-0 bottom-0 z-50 max-h-[50svh] overflow-y-auto border-t border-[var(--border)] bg-[color-mix(in_oklab,var(--card)_96%,transparent)] px-4 py-3 backdrop-blur"
     >
       <div className="mx-auto flex max-w-6xl flex-col items-start gap-3 sm:flex-row sm:items-center sm:justify-between">
         <p className="text-sm text-[var(--muted-foreground)]">
@@ -59,7 +59,7 @@ export function CookieBanner() {
         <button
           type="button"
           onClick={dismiss}
-          className="shrink-0 rounded-full bg-[var(--primary)] px-4 py-1.5 text-sm font-semibold text-[var(--primary-foreground)] transition-opacity hover:opacity-90"
+          className="min-h-11 shrink-0 cursor-pointer rounded-full bg-[var(--primary)] px-4 py-1.5 text-sm font-semibold text-[var(--primary-foreground)] transition-opacity hover:opacity-90 focus-visible:outline-2 focus-visible:outline-[var(--accent)]"
         >
           {t("bannerAccept")}
         </button>

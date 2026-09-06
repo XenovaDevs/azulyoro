@@ -69,7 +69,7 @@ export const StandingsTable = memo(function StandingsTable({
 
   return (
     <div className="flex flex-col gap-3">
-      <div className="relative overflow-x-auto rounded-xl border border-[var(--border)] bg-[var(--card)] shadow-xs touch-pan-x">
+      <div role="region" tabIndex={0} aria-label={captionTitle || (isEs ? "Tabla de posiciones" : "Standings table")} className="relative overflow-x-auto rounded-xl border border-[var(--border)] bg-[var(--card)] shadow-xs focus-visible:outline-2 focus-visible:outline-[var(--accent)]">
         <table className="w-full text-sm tabular-nums border-separate border-spacing-0 text-left">
           <caption className="sr-only">
             {captionTitle || (isEs ? "Tabla de posiciones" : "Standings table")}

@@ -28,7 +28,7 @@ export function ArticleCard({ article }: { article: ArticleListItemDto }) {
   return (
     <Link
       href={{ pathname: "/noticias/[slug]", params: { slug: article.slug } }}
-      className="group flex flex-col overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--card)] transition-colors hover:border-[var(--accent)]"
+      className="group flex min-w-0 flex-col overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--card)] [overflow-wrap:anywhere] transition-colors hover:border-[var(--accent)]"
     >
       <span className="relative block w-full overflow-hidden bg-[var(--muted)]">
         <span className="block aspect-[16/9] w-full">

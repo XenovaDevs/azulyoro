@@ -80,7 +80,7 @@ export default async function ArticleDetailPage({
         ]}
       />
 
-      <article className="flex flex-col gap-6">
+      <article className="flex min-w-0 flex-col gap-6 [overflow-wrap:anywhere]">
         <header className="flex flex-col gap-3">
           {article.category === "Rumor" && (
             <span>
@@ -116,7 +116,7 @@ export default async function ArticleDetailPage({
         )}
 
         <div
-          className="article-body flex flex-col gap-4 text-[var(--foreground)] leading-relaxed [&_a]:text-[var(--accent)] [&_a]:underline [&_h2]:mt-4 [&_h2]:font-display [&_h2]:text-xl [&_h2]:font-semibold [&_h3]:mt-3 [&_h3]:font-display [&_h3]:text-lg [&_h3]:font-semibold [&_ul]:list-disc [&_ul]:pl-6 [&_ol]:list-decimal [&_ol]:pl-6"
+          className="article-body flex min-w-0 flex-col gap-4 text-[var(--foreground)] leading-relaxed [&_a]:text-[var(--accent)] [&_a]:underline [&_h2]:mt-4 [&_h2]:font-display [&_h2]:text-xl [&_h2]:font-semibold [&_h3]:mt-3 [&_h3]:font-display [&_h3]:text-lg [&_h3]:font-semibold [&_iframe]:max-w-full [&_img]:h-auto [&_img]:max-w-full [&_pre]:max-w-full [&_pre]:overflow-x-auto [&_table]:block [&_table]:max-w-full [&_table]:overflow-x-auto [&_ul]:list-disc [&_ul]:pl-6 [&_ol]:list-decimal [&_ol]:pl-6 [&_video]:h-auto [&_video]:max-w-full"
           dangerouslySetInnerHTML={{ __html: article.bodyHtml ?? "" }}
         />
 

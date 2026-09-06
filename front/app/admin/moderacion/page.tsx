@@ -41,11 +41,11 @@ export default async function ModerationPage() {
           {items.map((item) => (
             <li
               key={item.id}
-              className="flex flex-col gap-3 rounded-xl border border-[var(--border)] bg-[var(--card)] p-4"
+              className="flex min-w-0 flex-col gap-3 rounded-xl border border-[var(--border)] bg-[var(--card)] p-4"
             >
               <div className="flex flex-wrap items-center gap-2 text-xs text-[var(--muted-foreground)]">
                 <span className="rounded bg-[var(--muted)] px-2 py-0.5 font-mono uppercase">
-                  {item.shortId}
+                  {item.id.replaceAll("-", "").slice(0, 6).toUpperCase()}
                 </span>
                 <span className="rounded bg-[var(--muted)] px-2 py-0.5 uppercase">
                   {item.category}
@@ -80,7 +80,7 @@ export default async function ModerationPage() {
                   <input type="hidden" name="id" value={item.id} />
                   <button
                     type="submit"
-                    className="rounded-md bg-[var(--primary)] px-4 py-2 text-sm font-semibold text-[var(--primary-foreground)] transition-opacity hover:opacity-90"
+                    className="min-h-11 rounded-md bg-[var(--primary)] px-4 py-2 text-sm font-semibold text-[var(--primary-foreground)] transition-opacity hover:opacity-90"
                   >
                     Aprobar
                   </button>
@@ -89,7 +89,7 @@ export default async function ModerationPage() {
                   <input type="hidden" name="id" value={item.id} />
                   <button
                     type="submit"
-                    className="rounded-md border border-[var(--border)] px-4 py-2 text-sm font-semibold transition-colors hover:bg-[var(--muted)]"
+                    className="min-h-11 rounded-md border border-[var(--border)] px-4 py-2 text-sm font-semibold transition-colors hover:bg-[var(--muted)]"
                   >
                     Rechazar
                   </button>

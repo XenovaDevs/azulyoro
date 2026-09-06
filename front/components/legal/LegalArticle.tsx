@@ -32,7 +32,7 @@ export async function LegalArticle({
       </header>
 
       <div
-        className="legal-prose flex flex-col gap-4 text-[var(--foreground)]"
+        className="legal-prose flex min-w-0 flex-col gap-4 text-[var(--foreground)] [overflow-wrap:anywhere] [&_iframe]:max-w-full [&_img]:h-auto [&_img]:max-w-full [&_pre]:max-w-full [&_pre]:overflow-x-auto [&_table]:block [&_table]:max-w-full [&_table]:overflow-x-auto [&_video]:h-auto [&_video]:max-w-full"
         dangerouslySetInnerHTML={{ __html: page.bodyHtml }}
       />
     </main>

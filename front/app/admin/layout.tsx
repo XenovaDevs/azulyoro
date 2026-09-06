@@ -37,14 +37,14 @@ async function AdminGate({
     <html lang="es" className="h-full antialiased">
       <body className="min-h-full bg-[var(--background)] text-[var(--foreground)]">
         <header className="border-b border-[var(--border)] bg-[var(--card)]">
-          <div className="mx-auto flex w-full max-w-5xl items-center justify-between gap-4 px-4 py-4">
-            <Link href="/admin/moderacion" className="font-display text-xl font-bold">
+          <div className="mx-auto flex w-full max-w-5xl flex-wrap items-center justify-between gap-x-4 gap-y-1 px-4 py-3">
+            <Link href="/admin/moderacion" className="inline-flex min-h-11 items-center font-display text-xl font-bold">
               CMS Azul y Oro
             </Link>
             <nav className="flex items-center gap-4 text-sm">
               <Link
                 href="/admin/moderacion"
-                className="text-[var(--muted-foreground)] transition-colors hover:text-[var(--foreground)]"
+                className="inline-flex min-h-11 items-center text-[var(--muted-foreground)] transition-colors hover:text-[var(--foreground)]"
               >
                 Moderación
               </Link>
@@ -59,7 +59,7 @@ async function AdminGate({
           Área admin — acceso restringido a usuarios con rol Admin
         </div>
 
-        <main className="mx-auto w-full max-w-5xl px-4 py-8">{children}</main>
+        <main className="mx-auto w-full min-w-0 max-w-5xl px-4 py-8 [overflow-wrap:anywhere]">{children}</main>
       </body>
     </html>
   );

@@ -48,7 +48,7 @@ const API_URL = (process.env.NEXT_PUBLIC_API_URL ?? "https://api.azulyoro.com.ar
 
 function TeamCrest({ name, logoUrl }: { name: string | null; logoUrl: string | null }) {
   return (
-    <span className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-[color-mix(in_oklab,var(--foreground)_6%,transparent)] p-2">
+    <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[color-mix(in_oklab,var(--foreground)_6%,transparent)] p-2 sm:h-16 sm:w-16">
       {logoUrl ? (
         // eslint-disable-next-line @next/next/no-img-element
         <img src={logoUrl} alt={name ?? ""} width={56} height={56} loading="eager" className="h-full w-full object-contain" />
@@ -129,7 +129,7 @@ export function LiveMatchStream({
   return (
     <div className="flex flex-col gap-8" aria-live="polite">
       {/* Scoreboard Card */}
-      <section className="overflow-hidden rounded-2xl border border-[var(--border)] bg-gradient-to-b from-[var(--azul-900)] to-[var(--card)] p-6 text-[var(--foreground)] shadow-lg">
+      <section className="overflow-hidden rounded-2xl border border-[var(--border)] bg-gradient-to-b from-[var(--azul-900)] to-[var(--card)] p-4 text-[var(--foreground)] shadow-lg sm:p-6">
         <div className="mb-6 flex items-center justify-between gap-2 text-xs font-semibold uppercase tracking-wide">
           <span className="text-[var(--oro-500)]">{sportsCompetitionLabel(match.competitionName, locale)}</span>
           {state === "live" ? (
@@ -141,13 +141,13 @@ export function LiveMatchStream({
           )}
         </div>
 
-        <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-4">
+        <div className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2 sm:gap-4">
           <div className="flex flex-col items-center gap-2 text-center">
             <TeamCrest name={match.homeTeamName} logoUrl={match.homeTeamLogoUrl} />
-            <span className="font-display text-sm font-semibold sm:text-base">{match.homeTeamName}</span>
+            <span className="max-w-full break-words font-display text-sm font-semibold sm:text-base">{match.homeTeamName}</span>
           </div>
           <div className="px-2 text-center">
-            <div className="tabular-nums text-4xl font-bold sm:text-5xl">
+            <div className="tabular-nums text-3xl font-bold sm:text-5xl">
               {played ? `${update.homeGoals ?? "—"} : ${update.awayGoals ?? "—"}` : "vs"}
             </div>
             {played && detail && (detail.htHome != null || detail.htAway != null) && (
@@ -158,7 +158,7 @@ export function LiveMatchStream({
           </div>
           <div className="flex flex-col items-center gap-2 text-center">
             <TeamCrest name={match.awayTeamName} logoUrl={match.awayTeamLogoUrl} />
-            <span className="font-display text-sm font-semibold sm:text-base">{match.awayTeamName}</span>
+            <span className="max-w-full break-words font-display text-sm font-semibold sm:text-base">{match.awayTeamName}</span>
           </div>
         </div>
 

@@ -48,7 +48,7 @@ export function StandingsFilterView({ overview, locale }: { overview: Competitio
   const groups = fixtureGroups(regularFixtures.slice(0, visible));
   const shown = Math.min(visible, regularFixtures.length) + playoffFixtures.length;
   const total = regularFixtures.length + playoffFixtures.length;
-  const selectClass = "min-h-11 w-full min-w-0 rounded-lg border border-[var(--border)] bg-[var(--card)] px-3 py-2 text-sm focus:outline-2 focus:outline-[var(--accent)]";
+  const selectClass = "min-h-11 w-full min-w-0 rounded-lg border border-[var(--border)] bg-[var(--card)] px-3 py-2 text-base focus:outline-2 focus:outline-[var(--accent)] sm:text-sm";
 
   return (
     <div className="flex min-w-0 flex-col gap-7">
@@ -105,7 +105,7 @@ export function StandingsFilterView({ overview, locale }: { overview: Competitio
           </div>
         ))}
         {total === 0 ? <EmptyState title={t("noFixtures")} description={t("noFixturesDescription")} /> : null}
-        {visible < regularFixtures.length ? <button type="button" onClick={() => setVisible((count) => count + 30)} className="self-center rounded-full border border-[var(--border)] px-5 py-2.5 text-sm font-semibold hover:border-[var(--accent)]">{t("loadMore")}</button> : null}
+        {visible < regularFixtures.length ? <button type="button" onClick={() => setVisible((count) => count + 30)} className="min-h-11 cursor-pointer self-center rounded-full border border-[var(--border)] px-5 py-2.5 text-sm font-semibold hover:border-[var(--accent)] focus-visible:outline-2 focus-visible:outline-[var(--accent)]">{t("loadMore")}</button> : null}
       </section>
     </div>
   );

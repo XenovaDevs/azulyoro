@@ -42,7 +42,7 @@ function Field({
   defaultValue?: string;
 }) {
   return (
-    <label className="flex flex-col gap-1 text-sm">
+    <label className="flex min-w-0 flex-col gap-1 text-sm">
       <span className="font-medium">
         {label}
         {required ? " (*)" : ""}
@@ -53,14 +53,14 @@ function Field({
           required={required}
           rows={8}
           defaultValue={defaultValue}
-          className="rounded-md border border-[var(--border)] bg-[var(--background)] px-3 py-2 font-mono text-xs"
+          className="min-h-11 w-full min-w-0 resize-y rounded-md border border-[var(--border)] bg-[var(--background)] px-3 py-2 font-mono text-base sm:text-sm"
         />
       ) : (
         <input
           name={name}
           required={required}
           defaultValue={defaultValue}
-          className="rounded-md border border-[var(--border)] bg-[var(--background)] px-3 py-2"
+          className="min-h-11 w-full min-w-0 rounded-md border border-[var(--border)] bg-[var(--background)] px-3 py-2 text-base sm:text-sm"
         />
       )}
     </label>
@@ -69,7 +69,7 @@ function Field({
 
 function LocaleColumn({ loc, title }: { loc: "es" | "en"; title: string }) {
   return (
-    <fieldset className="flex flex-col gap-4 rounded-xl border border-[var(--border)] bg-[var(--card)] p-4">
+    <fieldset className="flex min-w-0 flex-col gap-4 rounded-xl border border-[var(--border)] bg-[var(--card)] p-4">
       <legend className="px-2 font-display text-sm font-semibold uppercase tracking-wide text-[var(--accent)]">
         {title}
       </legend>
@@ -107,7 +107,9 @@ export default async function ArticleEditorPage({
     <div className="flex flex-col gap-6">
       <header className="flex flex-col gap-1">
         <h1 className="font-display text-2xl font-bold">Editar artículo</h1>
-        <p className="font-mono text-xs text-[var(--muted-foreground)]">{id}</p>
+        <p className="font-mono text-xs text-[var(--muted-foreground)]">
+          {id.replaceAll("-", "").slice(0, 6).toUpperCase()}
+        </p>
       </header>
 
       <form className="flex flex-col gap-6">
@@ -117,12 +119,12 @@ export default async function ArticleEditorPage({
         </div>
 
         <div className="grid gap-4 rounded-xl border border-[var(--border)] bg-[var(--card)] p-4 sm:grid-cols-2">
-          <label className="flex flex-col gap-1 text-sm">
+          <label className="flex min-w-0 flex-col gap-1 text-sm">
             <span className="font-medium">Categoría (*)</span>
             <select
               name="category"
               defaultValue="News"
-              className="rounded-md border border-[var(--border)] bg-[var(--background)] px-3 py-2"
+              className="min-h-11 w-full min-w-0 rounded-md border border-[var(--border)] bg-[var(--background)] px-3 py-2 text-base sm:text-sm"
             >
               {CATEGORIES.map((c) => (
                 <option key={c} value={c}>
@@ -132,17 +134,17 @@ export default async function ArticleEditorPage({
             </select>
           </label>
 
-          <label className="flex flex-col gap-1 text-sm">
+          <label className="flex min-w-0 flex-col gap-1 text-sm">
             <span className="font-medium">URL de portada</span>
             <input
               name="coverImageUrl"
               type="url"
-              className="rounded-md border border-[var(--border)] bg-[var(--background)] px-3 py-2"
+              className="min-h-11 w-full min-w-0 rounded-md border border-[var(--border)] bg-[var(--background)] px-3 py-2 text-base sm:text-sm"
             />
           </label>
 
-          <label className="flex items-center gap-2 text-sm sm:col-span-2">
-            <input name="isMembersOnly" type="checkbox" className="h-4 w-4" />
+          <label className="flex min-h-11 cursor-pointer items-center gap-3 py-2 text-sm sm:col-span-2">
+            <input name="isMembersOnly" type="checkbox" className="h-5 w-5 shrink-0" />
             <span className="font-medium">Solo para socios</span>
           </label>
         </div>
@@ -151,14 +153,14 @@ export default async function ArticleEditorPage({
           <button
             type="submit"
             formAction={saveAction}
-            className="rounded-md border border-[var(--border)] px-5 py-2 text-sm font-semibold transition-colors hover:bg-[var(--muted)]"
+            className="min-h-11 rounded-md border border-[var(--border)] px-5 py-2 text-sm font-semibold transition-colors hover:bg-[var(--muted)]"
           >
             Guardar
           </button>
           <button
             type="submit"
             formAction={publishAction}
-            className="rounded-md bg-[var(--primary)] px-5 py-2 text-sm font-semibold text-[var(--primary-foreground)] transition-opacity hover:opacity-90"
+            className="min-h-11 rounded-md bg-[var(--primary)] px-5 py-2 text-sm font-semibold text-[var(--primary-foreground)] transition-opacity hover:opacity-90"
           >
             Publicar
           </button>

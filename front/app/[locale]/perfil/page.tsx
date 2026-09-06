@@ -40,7 +40,7 @@ export default async function ProfilePage({
         <p className="text-[var(--muted-foreground)]">{t("description")}</p>
       </header>
 
-      <dl className="grid gap-4 rounded-2xl border border-[var(--border)] bg-[var(--card)] p-6">
+      <dl className="grid min-w-0 gap-4 rounded-2xl border border-[var(--border)] bg-[var(--card)] p-4 [overflow-wrap:anywhere] sm:p-6">
         <div className="flex flex-col gap-0.5">
           <dt className="text-xs uppercase tracking-wide text-[var(--muted-foreground)]">
             {t("email")}
@@ -77,7 +77,7 @@ export default async function ProfilePage({
           // `/socios` is served as a same-segment route in both locales (it is
           // not in the localized pathnames map); Link still prefixes the locale.
           href={"/socios" as React.ComponentProps<typeof Link>["href"]}
-          className="rounded-full bg-[var(--primary)] px-4 py-2 text-sm font-semibold text-[var(--primary-foreground)] transition-opacity hover:opacity-90"
+          className="inline-flex min-h-11 items-center justify-center rounded-full bg-[var(--primary)] px-4 py-2 text-center text-sm font-semibold text-[var(--primary-foreground)] transition-opacity hover:opacity-90"
         >
           {t("membersCta")}
         </Link>

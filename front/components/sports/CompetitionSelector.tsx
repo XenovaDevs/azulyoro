@@ -23,7 +23,7 @@ export function CompetitionSelector({ competitions, competitionId, season }: {
     startTransition(() => router.push(`${pathname}?${new URLSearchParams({ competition: id, season: String(year) })}`, { scroll: false }));
   }
 
-  const selectClass = "min-h-11 w-full min-w-0 rounded-lg border border-[var(--border)] bg-[var(--card)] px-3 py-2.5 text-sm font-medium focus:outline-2 focus:outline-[var(--accent)] disabled:opacity-60";
+  const selectClass = "min-h-11 w-full min-w-0 rounded-lg border border-[var(--border)] bg-[var(--card)] px-3 py-2.5 text-base font-medium focus:outline-2 focus:outline-[var(--accent)] disabled:opacity-60 sm:text-sm";
   return (
     <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_10rem]" aria-busy={pending}>
       <label className="flex flex-col gap-1.5 text-xs text-[var(--muted-foreground)]">

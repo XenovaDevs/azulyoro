@@ -1,5 +1,7 @@
 # Corrección de competiciones y posiciones — 2026-09-05
 
+Actualización 2026-09-06: [revisión responsive](responsive-audit.md) completada con 115 comprobaciones de tamaño en navegador, correcciones de navegación y componentes, 33 pruebas y build aprobados.
+
 Trabajo actual: [estadísticas del partido](match-statistics.md), incluidos posesión, remates y tarjetas, con sincronización y actualización en vivo.
 
 Actualización 2026-09-06: completada la mejora de comodidad, adaptación móvil e idioma de las llaves. Plan y evidencia de las 29 pruebas, build y revisión en navegador en [playoffs-ux.md](playoffs-ux.md).

@@ -173,15 +173,16 @@ export function MatchLineupsView({
     <div className="flex flex-col gap-6">
       {/* Team selector tabs */}
       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[var(--border)] pb-3">
-        <div className="flex items-center gap-2">
+        <div className="flex min-w-0 flex-wrap items-center gap-2">
           {lineups.map((lu, idx) => {
             const active = idx === selectedTeamIdx;
             return (
               <button
                 key={lu.teamId || idx}
                 type="button"
+                aria-pressed={active}
                 onClick={() => setSelectedTeamIdx(idx)}
-                className={`rounded-lg px-4 py-2 text-sm font-semibold transition-all ${
+                className={`min-h-11 max-w-full cursor-pointer rounded-lg px-3 py-2 text-left text-sm font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-[var(--accent)] ${
                   active
                     ? "bg-[var(--accent)] text-white shadow-md"
                     : "bg-[var(--muted)] text-[var(--muted-foreground)] hover:bg-[color-mix(in_oklab,var(--foreground)_8%,var(--muted))] hover:text-[var(--foreground)]"
@@ -199,7 +200,7 @@ export function MatchLineupsView({
         </div>
 
         {activeLineup.coachName && (
-          <div className="flex items-center gap-2 rounded-md bg-[var(--card)] border border-[var(--border)] px-3 py-1.5 text-xs text-[var(--muted-foreground)]">
+          <div className="flex min-w-0 flex-wrap items-center gap-2 rounded-md bg-[var(--card)] border border-[var(--border)] px-3 py-1.5 text-xs text-[var(--muted-foreground)]">
             <span className="font-semibold text-[var(--foreground)]">
               {isEs ? "DT:" : "Coach:"}
             </span>
@@ -209,7 +210,7 @@ export function MatchLineupsView({
       </div>
 
       {/* Main pitch & bench layout */}
-      <div className="grid gap-6 lg:grid-cols-[1.5fr_1fr]">
+      <div className="grid min-w-0 gap-6 lg:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)]">
         {/* Tactical Pitch (View from above) */}
         <div className="relative flex flex-col overflow-hidden rounded-2xl border-2 border-emerald-800/80 bg-gradient-to-b from-emerald-700 via-emerald-800 to-emerald-900 p-4 sm:p-6 shadow-2xl text-white">
           {/* Pitch Field Markings (SVG overlay) */}
@@ -247,17 +248,18 @@ export function MatchLineupsView({
             {tacticalLines.map((line, lineIdx) => (
               <div
                 key={lineIdx}
-                className="flex items-center justify-around gap-2 px-2"
+                className="grid items-start justify-items-center gap-1 sm:gap-2"
+                style={{ gridTemplateColumns: `repeat(${line.length}, minmax(0, 1fr))` }}
               >
                 {line.map((player) => {
                   const badges = getPlayerBadges(player.playerId, player.playerName, events);
                   return (
                     <div
                       key={player.playerId}
-                      className="group flex flex-col items-center gap-1.5 transition-transform hover:scale-110"
+                      className="group flex w-full min-w-0 flex-col items-center gap-1.5"
                     >
                       {/* Tactical Player Circle with Photo & Badges */}
-                      <div className="relative flex h-11 w-11 sm:h-14 sm:w-14 items-center justify-center rounded-full shadow-xl transition-shadow group-hover:shadow-amber-400/50">
+                      <div className="relative flex aspect-square w-11 max-w-full sm:w-14 items-center justify-center rounded-full shadow-xl transition-shadow group-hover:shadow-amber-400/50">
                         {player.photoUrl ? (
                           <div className={`relative h-full w-full rounded-full overflow-hidden border-2 shadow-inner bg-slate-900 ${
                             isBoca ? "border-amber-400" : "border-slate-300"
@@ -333,7 +335,7 @@ export function MatchLineupsView({
                       </div>
 
                       {/* Player Name Pill */}
-                      <span className="max-w-[85px] sm:max-w-[105px] truncate rounded-md bg-black/85 px-2 py-0.5 text-center text-[10px] sm:text-xs font-semibold text-white backdrop-blur-xs border border-white/20 shadow-md">
+                      <span title={player.playerName ?? undefined} className="w-full min-w-0 max-w-[105px] break-words rounded-md bg-black/85 px-1 py-0.5 text-center text-[10px] sm:text-xs font-semibold text-white backdrop-blur-xs border border-white/20 shadow-md">
                         {player.playerName ?? "—"}
                       </span>
                     </div>
@@ -367,7 +369,7 @@ export function MatchLineupsView({
                       key={sub.playerId}
                       className="flex items-center justify-between py-2 text-sm hover:bg-[color-mix(in_oklab,var(--foreground)_3%,var(--card))] px-1 rounded transition-colors"
                     >
-                      <div className="flex items-center gap-2.5">
+                      <div className="flex min-w-0 items-center gap-2.5">
                         <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[var(--muted)] text-xs font-bold tabular-nums text-[var(--muted-foreground)]">
                           {sub.number ?? "–"}
                         </span>
@@ -377,13 +379,13 @@ export function MatchLineupsView({
                             <img src={sub.photoUrl} alt="" className="h-full w-full object-cover object-top" loading="lazy" />
                           </span>
                         )}
-                        <span className="font-medium text-[var(--foreground)]">
+                        <span className="min-w-0 break-words font-medium text-[var(--foreground)]">
                           {sub.playerName ?? "—"}
                         </span>
                       </div>
 
                       {/* Event indicators for substitutes */}
-                      <div className="flex items-center gap-1.5">
+                      <div className="flex shrink-0 items-center gap-1.5">
                         {badges.subbedIn && (
                           <span
                             className="inline-flex items-center gap-0.5 rounded bg-emerald-500/15 px-1.5 py-0.5 text-[10px] font-bold text-emerald-500"

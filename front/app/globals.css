@@ -37,6 +37,10 @@
 }
 
 @layer base {
+  html {
+    scroll-padding-top: 8rem;
+  }
+
   :root {
     /* Brand palette — deep navy blue + warm orange-gold (last-season kit vibe,
        gold-forward). Hues ~258 (navy) and ~78 (amber-gold). */

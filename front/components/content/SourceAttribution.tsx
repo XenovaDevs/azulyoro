@@ -15,7 +15,7 @@ export function SourceAttribution({
   if (!sourceName) return null;
 
   return (
-    <p className="text-sm text-[var(--muted-foreground)]">
+    <p className="text-sm text-[var(--muted-foreground)] [overflow-wrap:anywhere]">
       {t("source")}:{" "}
       {sourceUrl ? (
         <a

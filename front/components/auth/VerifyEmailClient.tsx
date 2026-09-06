@@ -49,7 +49,7 @@ export function VerifyEmailClient({
       {state !== "loading" && (
         <Link
           href="/ingresar"
-          className="text-center text-sm font-semibold text-[var(--primary)]"
+          className="inline-flex min-h-11 items-center justify-center text-center text-sm font-semibold text-[var(--primary)]"
         >
           {t("goToLogin")}
         </Link>

@@ -83,12 +83,12 @@ export function RegisterForm() {
         value={displayName}
         onChange={(e) => setDisplayName(e.target.value)}
       />
-      <label className="flex items-start gap-2 text-sm text-[var(--muted-foreground)]">
+      <label className="flex min-h-11 cursor-pointer items-start gap-3 py-2 text-sm text-[var(--muted-foreground)]">
         <input
           type="checkbox"
           checked={optIn}
           onChange={(e) => setOptIn(e.target.checked)}
-          className="mt-0.5"
+          className="mt-0.5 h-5 w-5 shrink-0"
         />
         <span>{t("optIn")}</span>
       </label>

@@ -2,6 +2,7 @@ import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { BrandMark } from "@/components/ui/BrandMark";
 import { LocaleSwitcher } from "@/components/ui/LocaleSwitcher";
+import { MobileNavigation } from "./MobileNavigation";
 
 const NAV = [
   { href: "/partidos", key: "matches" },
@@ -22,12 +23,12 @@ export function Header() {
           <BrandMark compactOnMobile />
         </Link>
 
-        <nav className="hidden items-center gap-4 text-sm font-medium lg:flex">
+        <nav aria-label={t("menu")} className="hidden items-center gap-4 text-sm font-medium lg:flex">
           {NAV.map((item) => (
             <Link
               key={item.href}
               href={item.href}
-              className="text-[var(--muted-foreground)] transition-colors hover:text-[var(--foreground)]"
+              className="inline-flex min-h-11 items-center text-[var(--muted-foreground)] transition-colors hover:text-[var(--foreground)]"
             >
               {t(item.key)}
             </Link>
@@ -54,6 +55,9 @@ export function Header() {
           </Link>
         </div>
       </div>
+      <MobileNavigation label={t("menu")}>
+        {NAV.map(item => <Link key={item.href} href={item.href} className="flex min-h-11 items-center rounded-lg px-3 py-2 text-sm font-medium hover:bg-[var(--muted)] focus-visible:outline-2 focus-visible:outline-[var(--accent)]">{t(item.key)}</Link>)}
+      </MobileNavigation>
     </header>
   );
 }

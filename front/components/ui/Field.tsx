@@ -16,7 +16,7 @@ export function Field({
   children?: ReactNode;
 } & InputHTMLAttributes<HTMLInputElement>) {
   return (
-    <div className="flex flex-col gap-1.5">
+    <div className="flex min-w-0 flex-col gap-1.5">
       <label htmlFor={id} className="text-sm font-medium">
         {label}
         {required && (
@@ -31,7 +31,7 @@ export function Field({
           id={id}
           required={required}
           aria-required={required}
-          className="rounded-lg border border-[var(--border)] bg-[var(--card)] px-3 py-2 text-sm outline-none transition-colors focus:border-[var(--primary)]"
+          className="min-h-11 w-full min-w-0 rounded-lg border border-[var(--border)] bg-[var(--card)] px-3 py-2 text-base outline-none transition-colors focus:border-[var(--primary)] sm:text-sm"
           {...input}
         />
       )}

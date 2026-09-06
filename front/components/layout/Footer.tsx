@@ -25,7 +25,7 @@ export function Footer() {
               <Link
                 key={l.href}
                 href={l.href}
-                className="transition-colors hover:text-[var(--foreground)]"
+                className="inline-flex min-h-11 items-center transition-colors hover:text-[var(--foreground)] focus-visible:outline-2 focus-visible:outline-[var(--accent)]"
               >
                 {t(l.key)}
               </Link>

@@ -185,10 +185,10 @@ export function MatchEventsList({
         return (
           <li
             key={i}
-            className="flex items-center gap-3 rounded-xl border border-[var(--border)] bg-[var(--card)] px-3.5 py-2.5 text-sm transition-colors hover:bg-[color-mix(in_oklab,var(--foreground)_3%,var(--card))]"
+            className="grid min-w-0 grid-cols-[2.5rem_1.25rem_minmax(0,1fr)] items-start gap-x-2 gap-y-1 rounded-xl border border-[var(--border)] bg-[var(--card)] px-3 py-3 text-sm [overflow-wrap:anywhere] transition-colors hover:bg-[color-mix(in_oklab,var(--foreground)_3%,var(--card))]"
           >
             {/* Minute */}
-            <span className="w-12 shrink-0 tabular-nums font-bold text-[var(--accent)] text-sm">
+            <span className="tabular-nums font-bold text-[var(--accent)] text-sm">
               {e.minute}
               {e.extraMinute ? `+${e.extraMinute}` : ""}&apos;
             </span>
@@ -203,7 +203,7 @@ export function MatchEventsList({
               {isSub ? (
                 <div className="flex flex-wrap items-center gap-3 font-medium">
                   {/* Player In */}
-                  <span className="inline-flex items-center gap-1.5 text-emerald-400 font-semibold">
+                  <span className="inline-flex max-w-full flex-wrap items-center gap-1.5 text-emerald-400 font-semibold">
                     <span className="h-2 w-2 rounded-full bg-emerald-500 inline-block" />
                     <span className="text-xs uppercase tracking-wide font-bold">⬆️ {isEs ? "Entra:" : "In:"}</span>
                     <PlayerAvatar name={e.playerName} photoUrl={e.playerPhotoUrl} size="sm" />
@@ -214,7 +214,7 @@ export function MatchEventsList({
 
                   {/* Player Out */}
                   {e.assistName && (
-                    <span className="inline-flex items-center gap-1.5 text-rose-400 font-medium">
+                    <span className="inline-flex max-w-full flex-wrap items-center gap-1.5 text-rose-400 font-medium">
                       <span className="h-2 w-2 rounded-full bg-rose-500 inline-block" />
                       <span className="text-xs uppercase tracking-wide font-bold">⬇️ {isEs ? "Sale:" : "Out:"}</span>
                       <PlayerAvatar name={e.assistName} photoUrl={e.assistPhotoUrl} size="sm" />
@@ -238,7 +238,7 @@ export function MatchEventsList({
                     · {translatedType}
                   </span>
                   {e.assistName && (
-                    <span className="inline-flex items-center gap-1 text-xs text-[var(--muted-foreground)] ml-1">
+                    <span className="inline-flex max-w-full flex-wrap items-center gap-1 text-xs text-[var(--muted-foreground)] ml-1">
                       <span>({isEs ? "Asist:" : "Assist:"}</span>
                       <PlayerAvatar name={e.assistName} photoUrl={e.assistPhotoUrl} size="sm" />
                       <span className="font-medium text-[var(--foreground)]">{e.assistName}</span>
@@ -251,7 +251,7 @@ export function MatchEventsList({
 
             {/* Team label */}
             {teamName && (
-              <span className="shrink-0 rounded bg-[color-mix(in_oklab,var(--foreground)_6%,transparent)] px-2 py-0.5 text-xs font-semibold text-[var(--muted-foreground)]">
+              <span className="col-start-3 max-w-full justify-self-start rounded bg-[color-mix(in_oklab,var(--foreground)_6%,transparent)] px-2 py-0.5 text-xs font-semibold text-[var(--muted-foreground)]">
                 {teamName}
               </span>
             )}

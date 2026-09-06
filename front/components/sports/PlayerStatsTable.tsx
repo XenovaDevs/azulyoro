@@ -16,7 +16,7 @@ export async function PlayerStatsTable({
   const nameById = new Map(competitions.map((c) => [c.id, c.name]));
 
   return (
-    <div className="overflow-x-auto rounded-lg border border-[var(--border)]">
+    <div role="region" tabIndex={0} aria-label={t("seasonStats")} className="overflow-x-auto rounded-lg border border-[var(--border)] focus-visible:outline-2 focus-visible:outline-[var(--accent)]">
       <table className="w-full min-w-[560px] text-sm tabular-nums">
         <thead>
           <tr className="border-b border-[var(--border)] bg-[var(--muted)] text-left text-xs uppercase tracking-wide text-[var(--muted-foreground)]">
