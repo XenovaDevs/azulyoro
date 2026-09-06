@@ -82,7 +82,8 @@ public sealed record LiveFixtureUpdate(
     int? Elapsed,
     int? HomeGoals,
     int? AwayGoals,
-    IReadOnlyList<LiveEventUpdate> Events);
+    IReadOnlyList<LiveEventUpdate> Events,
+    MatchStatisticsDto? TeamStats = null);
 
 public sealed record LiveEventUpdate(
     int Minute,

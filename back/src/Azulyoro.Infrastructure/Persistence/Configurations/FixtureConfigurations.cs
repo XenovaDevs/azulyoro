@@ -4,6 +4,20 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace Azulyoro.Infrastructure.Persistence.Configurations;
 
+public class FixtureTeamStatisticConfiguration : IEntityTypeConfiguration<FixtureTeamStatistic>
+{
+    public void Configure(EntityTypeBuilder<FixtureTeamStatistic> b)
+    {
+        b.HasKey(x => x.Id);
+        b.HasIndex(x => new { x.FixtureId, x.TeamId, x.Key }).IsUnique();
+        b.Property(x => x.Key).HasMaxLength(40);
+        b.Property(x => x.Value).HasPrecision(12, 4);
+        b.HasOne(x => x.Fixture).WithMany(f => f.TeamStatistics)
+            .HasForeignKey(x => x.FixtureId).OnDelete(DeleteBehavior.Cascade);
+        b.HasOne<Team>().WithMany().HasForeignKey(x => x.TeamId).OnDelete(DeleteBehavior.Restrict);
+    }
+}
+
 public class FixtureConfiguration : IEntityTypeConfiguration<Fixture>
 {
     public void Configure(EntityTypeBuilder<Fixture> b)

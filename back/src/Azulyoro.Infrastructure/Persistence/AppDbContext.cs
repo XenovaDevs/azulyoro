@@ -25,6 +25,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options)
     public DbSet<FixtureLineup> FixtureLineups => Set<FixtureLineup>();
     public DbSet<FixtureLineupPlayer> FixtureLineupPlayers => Set<FixtureLineupPlayer>();
     public DbSet<FixturePlayerStats> FixturePlayerStats => Set<FixturePlayerStats>();
+    public DbSet<FixtureTeamStatistic> FixtureTeamStatistics => Set<FixtureTeamStatistic>();
     public DbSet<PlayerSeasonStats> PlayerSeasonStats => Set<PlayerSeasonStats>();
     public DbSet<Standing> Standings => Set<Standing>();
     public DbSet<SyncState> SyncStates => Set<SyncState>();

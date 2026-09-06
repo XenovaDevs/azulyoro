@@ -1,3 +1,4 @@
+using System.Text.Json;
 using System.Text.Json.Serialization;
 
 namespace Azulyoro.Infrastructure.ApiFootball;
@@ -5,6 +6,8 @@ namespace Azulyoro.Infrastructure.ApiFootball;
 /// <summary>Subset of the API-Football /fixtures?id= item used by live sync.</summary>
 public class ApiFixtureItem
 {
+    [JsonPropertyName("statistics")]
+    public List<ApiFixtureTeamStatistics>? Statistics { get; set; } = new();
     [JsonPropertyName("score")]
     public ApiScore Score { get; set; } = new();
 
@@ -22,6 +25,22 @@ public class ApiFixtureItem
 
     [JsonPropertyName("players")]
     public List<ApiFixturePlayers> Players { get; set; } = new();
+}
+
+public sealed class ApiFixtureTeamStatistics
+{
+    [JsonPropertyName("team")]
+    public ApiEventRef Team { get; set; } = new();
+    [JsonPropertyName("statistics")]
+    public List<ApiFixtureStatistic>? Statistics { get; set; } = new();
+}
+
+public sealed class ApiFixtureStatistic
+{
+    [JsonPropertyName("type")]
+    public string? Type { get; set; }
+    [JsonPropertyName("value")]
+    public JsonElement Value { get; set; }
 }
 
 public class ApiFixtureCore

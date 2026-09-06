@@ -2,13 +2,16 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import type { EventDto, LineupDto, MatchDetailDto, MatchDto, PlayerStatDto } from "@/lib/api/types";
+import type { EventDto, LineupDto, MatchDetailDto, MatchDto, MatchStatisticsDto, PlayerStatDto } from "@/lib/api/types";
 import { classifyStatus } from "@/lib/matchStatus";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { LiveScoreBadge } from "@/components/sports/LiveScoreBadge";
 import { MatchKickoffTime } from "@/components/sports/MatchKickoffTime";
 import { MatchEventsList } from "@/components/sports/MatchEventsList";
 import { MatchLineupsView } from "@/components/sports/MatchLineupsView";
+import { MatchStatistics } from "@/components/sports/MatchStatistics";
+import { parseMatchStatistics } from "@/lib/match-statistics";
+import { sportsCompetitionLabel, sportsRoundLabel } from "@/lib/sports-labels";
 
 interface LiveMatchStreamProps {
   match: MatchDto;
@@ -16,6 +19,7 @@ interface LiveMatchStreamProps {
   events: EventDto[];
   lineups?: LineupDto[];
   stats?: PlayerStatDto[];
+  teamStats?: MatchStatisticsDto | null;
   locale?: string;
   labels: {
     live: string;
@@ -37,6 +41,7 @@ interface LiveUpdate {
   homeGoals: number | null;
   awayGoals: number | null;
   events: EventDto[];
+  teamStats?: MatchStatisticsDto | null;
 }
 
 const API_URL = (process.env.NEXT_PUBLIC_API_URL ?? "https://api.azulyoro.com.ar").replace(/\/$/, "");
@@ -62,6 +67,7 @@ export function LiveMatchStream({
   events,
   lineups = [],
   stats = [],
+  teamStats = null,
   locale = "es",
   labels,
 }: LiveMatchStreamProps) {
@@ -73,6 +79,7 @@ export function LiveMatchStream({
     homeGoals: match.homeGoals,
     awayGoals: match.awayGoals,
     events,
+    teamStats,
   }));
 
   useEffect(() => {
@@ -88,7 +95,7 @@ export function LiveMatchStream({
         try {
           const next = JSON.parse(message.data) as LiveUpdate;
           if (next.fixtureId !== match.id) return;
-          setUpdate(next);
+          setUpdate(previous => ({ ...next, teamStats: parseMatchStatistics(next.teamStats) ?? previous.teamStats }));
           if (classifyStatus(next.status) === "finished") {
             finished = true;
             source?.close();
@@ -124,7 +131,7 @@ export function LiveMatchStream({
       {/* Scoreboard Card */}
       <section className="overflow-hidden rounded-2xl border border-[var(--border)] bg-gradient-to-b from-[var(--azul-900)] to-[var(--card)] p-6 text-[var(--foreground)] shadow-lg">
         <div className="mb-6 flex items-center justify-between gap-2 text-xs font-semibold uppercase tracking-wide">
-          <span className="text-[var(--oro-500)]">{match.competitionName}</span>
+          <span className="text-[var(--oro-500)]">{sportsCompetitionLabel(match.competitionName, locale)}</span>
           {state === "live" ? (
             <LiveScoreBadge label={labels.live} minute={update.elapsed} />
           ) : (
@@ -145,7 +152,7 @@ export function LiveMatchStream({
             </div>
             {played && detail && (detail.htHome != null || detail.htAway != null) && (
               <div className="mt-1 text-xs text-[var(--muted-foreground)]">
-                HT {detail.htHome ?? "—"}-{detail.htAway ?? "—"}
+                {locale === "es" ? "Entretiempo" : "Half-time"} {detail.htHome ?? "—"}-{detail.htAway ?? "—"}
               </div>
             )}
           </div>
@@ -163,13 +170,15 @@ export function LiveMatchStream({
             showTimezoneBadge
           />
           {detail?.venue ? <span>· {detail.venue}</span> : null}
-          {detail?.round ? <span>· {detail.round}</span> : null}
+          {detail?.round ? <span>· {sportsRoundLabel(detail.round, locale)}</span> : null}
         </div>
       </section>
 
       {!played && (
         <EmptyState title={labels.notStartedTitle} description={labels.notStartedDescription} />
       )}
+
+      <MatchStatistics data={update.teamStats ?? teamStats} status={update.status} homeTeamName={match.homeTeamName} awayTeamName={match.awayTeamName} locale={locale} />
 
       {/* Tactical Lineups (Field from above & Bench) */}
       <section>

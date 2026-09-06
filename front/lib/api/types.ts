@@ -91,6 +91,11 @@ export interface PlayerStatDto {
   red: number;
 }
 
+export interface MatchStatisticsDto {
+  updatedAt: string | null;
+  statistics: { key: string; home: number | null; away: number | null }[];
+}
+
 export interface PlayerDto {
   id: string;
   extId: number;

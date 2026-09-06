@@ -37,10 +37,22 @@ public class Fixture : Entity
     /// <summary>True when Boca plays (either side) — powers the (is_boca,date) index.</summary>
     public bool IsBoca { get; set; }
     public DateTime? LastSyncedAt { get; set; }
+    public DateTime? DetailLastAttemptAt { get; set; }
+    public DateTime? TeamStatisticsUpdatedAt { get; set; }
+    public ICollection<FixtureTeamStatistic> TeamStatistics { get; set; } = new List<FixtureTeamStatistic>();
 
     public ICollection<FixtureEvent> Events { get; set; } = new List<FixtureEvent>();
     public ICollection<FixtureLineup> Lineups { get; set; } = new List<FixtureLineup>();
     public ICollection<FixturePlayerStats> PlayerStats { get; set; } = new List<FixturePlayerStats>();
+}
+
+public class FixtureTeamStatistic : Entity
+{
+    public Guid FixtureId { get; set; }
+    public Fixture? Fixture { get; set; }
+    public Guid TeamId { get; set; }
+    public string Key { get; set; } = string.Empty;
+    public decimal? Value { get; set; }
 }
 
 public class FixtureEvent : Entity

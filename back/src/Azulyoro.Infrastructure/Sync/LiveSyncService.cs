@@ -175,6 +175,7 @@ public class LiveSyncService(
 
             var fixtureToUpdate = await db.Fixtures
                 .Include(f => f.Events)
+                .Include(f => f.TeamStatistics)
                 .FirstOrDefaultAsync(f => f.Id == fixtureId, ct);
             if (fixtureToUpdate is null)
             {
@@ -195,6 +196,8 @@ public class LiveSyncService(
             fixtureToUpdate.PenaltyHome = item.Score.Penalty.Home;
             fixtureToUpdate.PenaltyAway = item.Score.Penalty.Away;
             fixtureToUpdate.LastSyncedAt = DateTime.UtcNow;
+            var teams = await db.Teams.ToDictionaryAsync(t => t.ExtId, t => t.Id, ct);
+            MatchStatistics.Upsert(fixtureToUpdate, item.Statistics, teams);
 
             for (var seq = 0; seq < item.Events.Count; seq++)
             {
@@ -242,7 +245,8 @@ public class LiveSyncService(
             fixture.Elapsed,
             fixture.HomeGoals,
             fixture.AwayGoals,
-            events));
+            events,
+            await MatchStatistics.ReadAsync(db, fixtureId, ct)));
 
         var finished = fixture.Status.IsFinished();
         if (finished)

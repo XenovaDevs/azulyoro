@@ -8,6 +8,7 @@ import {
   getMatchEvents,
   getMatchLineups,
   getMatchPlayerStats,
+  getMatchStatistics,
 } from "@/lib/api/sports";
 import { matchSlug } from "@/lib/slug";
 import { classifyStatus, statusTranslationKey } from "@/lib/matchStatus";
@@ -18,6 +19,8 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { MatchKickoffTime } from "@/components/sports/MatchKickoffTime";
 import { MatchEventsList } from "@/components/sports/MatchEventsList";
 import { MatchLineupsView } from "@/components/sports/MatchLineupsView";
+import { MatchStatistics } from "@/components/sports/MatchStatistics";
+import { sportsCompetitionLabel, sportsRoundLabel } from "@/lib/sports-labels";
 import type { MatchDto } from "@/lib/api/types";
 
 export const revalidate = 0;
@@ -86,11 +89,12 @@ export default async function MatchDetailPage({
   const state = classifyStatus(match.status);
   const played = state !== "scheduled";
 
-  const [detail, events, lineups, stats] = await Promise.all([
+  const [detail, events, lineups, stats, teamStats] = await Promise.all([
     getMatch(match.id),
     played ? getMatchEvents(match.id) : Promise.resolve([]),
     played ? getMatchLineups(match.id) : Promise.resolve([]),
     played ? getMatchPlayerStats(match.id) : Promise.resolve([]),
+    played ? getMatchStatistics(match.id) : Promise.resolve(null),
   ]);
 
   const jsonLd = {
@@ -126,11 +130,13 @@ export default async function MatchDetailPage({
 
       {state === "live" || state === "scheduled" ? (
         <LiveMatchStream
+          key={match.id}
           match={match}
           detail={detail}
           events={events}
           lineups={lineups}
           stats={stats}
+          teamStats={teamStats}
           locale={locale}
           labels={{
             live: t("live"),
@@ -149,7 +155,7 @@ export default async function MatchDetailPage({
       {/* Scoreboard */}
       <section className="overflow-hidden rounded-2xl border border-[var(--border)] bg-gradient-to-b from-[var(--azul-900)] to-[var(--card)] p-6 text-[var(--foreground)] shadow-lg">
         <div className="mb-6 flex items-center justify-between gap-2 text-xs font-semibold uppercase tracking-wide">
-          <span className="text-[var(--oro-500)]">{match.competitionName}</span>
+          <span className="text-[var(--oro-500)]">{sportsCompetitionLabel(match.competitionName, locale)}</span>
           <span className="text-[var(--muted-foreground)]">{t(statusTranslationKey(match.status))}</span>
         </div>
 
@@ -167,7 +173,7 @@ export default async function MatchDetailPage({
             </div>
             {played && detail && (detail.htHome != null || detail.htAway != null) && (
               <div className="mt-1 text-xs text-[var(--muted-foreground)]">
-                HT {detail.htHome ?? "—"}-{detail.htAway ?? "—"}
+                {locale === "es" ? "Entretiempo" : "Half-time"} {detail.htHome ?? "—"}-{detail.htAway ?? "—"}
               </div>
             )}
             {match.penaltyHome != null && match.penaltyAway != null ? (
@@ -191,9 +197,11 @@ export default async function MatchDetailPage({
             showTimezoneBadge
           />
           {detail?.venue ? <span>· {detail.venue}</span> : null}
-          {detail?.round ? <span>· {detail.round}</span> : null}
+          {detail?.round ? <span>· {sportsRoundLabel(detail.round, locale)}</span> : null}
         </div>
       </section>
+
+      <MatchStatistics data={teamStats} status={match.status} homeTeamName={match.homeTeamName} awayTeamName={match.awayTeamName} locale={locale} />
 
       {/* Lineups (Tactical Pitch & Substitutes) */}
       <section>

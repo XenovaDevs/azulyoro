@@ -1,4 +1,5 @@
 import { apiGet, apiGetOrNull } from "./client";
+import { parseMatchStatistics } from "../match-statistics";
 import type {
   CompetitionDto,
   CompetitionOverviewDto,
@@ -83,6 +84,15 @@ export const getMatch = (id: string) =>
 
 export const getMatchEvents = (id: string) =>
   apiGet<EventDto[]>(`/api/matches/${id}/events`, { tags: [`match:${id}`], revalidate: SHORT });
+
+/** Statistics are independent: a missing endpoint/provider must not break the match page. */
+export async function getMatchStatistics(id: string) {
+  try {
+    return parseMatchStatistics(await apiGet<unknown>(`/api/matches/${encodeURIComponent(id)}/statistics`, { revalidate: false }));
+  } catch {
+    return null;
+  }
+}
 
 export const getMatchLineups = (id: string) =>
   apiGet<LineupDto[]>(`/api/matches/${id}/lineups`, { tags: [`match:${id}`], revalidate: SHORT });

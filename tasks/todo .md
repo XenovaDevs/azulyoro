@@ -1,5 +1,7 @@
 # Corrección de competiciones y posiciones — 2026-09-05
 
+Trabajo actual: [estadísticas del partido](match-statistics.md), incluidos posesión, remates y tarjetas, con sincronización y actualización en vivo.
+
 Actualización 2026-09-06: completada la mejora de comodidad, adaptación móvil e idioma de las llaves. Plan y evidencia de las 29 pruebas, build y revisión en navegador en [playoffs-ux.md](playoffs-ux.md).
 
 - [x] Diagnosticar datos publicados, agrupación de torneos, sincronización y cachés.

@@ -15,7 +15,7 @@ public interface IFixtureDetailSyncService
 }
 
 /// <summary>
-/// Syncs the per-fixture detail bundle (events, lineups, player stats) for a
+/// Syncs the per-fixture detail bundle (events, lineups, player and team stats) for a
 /// single finished (or in-progress) fixture. The live sync only runs while a
 /// match is in play, so finished matches would otherwise never receive their
 /// lineups/player-stats. External calls complete before database writes.
@@ -34,7 +34,7 @@ public sealed class FixtureDetailSyncService(
         var response = await api.GetAsync<ApiFixtureItem>(
             "fixtures", new Dictionary<string, string?> { ["id"] = extId.ToString() }, ct);
 
-        var item = response.Response.FirstOrDefault();
+        var item = response.HasErrors ? null : response.Response.FirstOrDefault(i => i.Fixture.Id == extId);
         if (item is null)
         {
             logger.LogWarning("Fixture-detail sync: no payload for fixture ext_id {ExtId}.", extId);
@@ -45,6 +45,7 @@ public sealed class FixtureDetailSyncService(
             .Include(f => f.Events)
             .Include(f => f.Lineups).ThenInclude(l => l.Players)
             .Include(f => f.PlayerStats)
+            .Include(f => f.TeamStatistics)
             .FirstOrDefaultAsync(f => f.Id == fixtureId, ct);
         if (fixture is null)
         {
@@ -90,10 +91,12 @@ public sealed class FixtureDetailSyncService(
         fixture.PenaltyHome = item.Score.Penalty.Home;
         fixture.PenaltyAway = item.Score.Penalty.Away;
         fixture.LastSyncedAt = DateTime.UtcNow;
+        fixture.DetailLastAttemptAt = DateTime.UtcNow;
 
         var eventCount = UpsertEvents(fixture, item, teamsByExt, playersByExt);
         UpsertLineups(fixture, item, teamsByExt, playersByExt);
         UpsertPlayerStats(fixture, item, teamsByExt, playersByExt);
+        MatchStatistics.Upsert(fixture, item.Statistics, teamsByExt);
 
         await db.SaveChangesAsync(ct);
         return eventCount;
@@ -106,16 +109,29 @@ public sealed class FixtureDetailSyncService(
             return;
         }
 
-        // Post-materialization filter for finished statuses (IsFinished is an
-        // extension method, not translatable to SQL), then target any fixture
-        // that lacks lineups, lacks events, or has events without resolved player names.
+        var now = DateTime.UtcNow;
+        var recent = now.AddDays(-1);
+        var recentRetry = now.AddMinutes(-15);
+        var historicalRetry = now.AddHours(-6);
+        var historicalRefresh = now.AddDays(-7);
+        // A bounded, fair queue: unavailable old fixtures cannot starve the rest.
+        // Recent finals are refreshed again for delayed provider corrections.
         var candidates = await db.Fixtures.AsNoTracking()
-            .Where(f => f.IsBoca && (
+            .Where(f => f.IsBoca && f.Status == FixtureStatus.Finished &&
+                (f.DetailLastAttemptAt == null || f.DetailLastAttemptAt < historicalRetry ||
+                    (f.DateUtc >= recent && f.DetailLastAttemptAt < recentRetry)) && (
+                f.DateUtc >= recent ||
+                f.TeamStatisticsUpdatedAt == null || f.TeamStatisticsUpdatedAt < historicalRefresh ||
+                !db.FixtureTeamStatistics.Any(s => s.FixtureId == f.Id && s.TeamId == f.HomeTeamId) ||
+                !db.FixtureTeamStatistics.Any(s => s.FixtureId == f.Id && s.TeamId == f.AwayTeamId) ||
                 !db.FixtureLineups.Any(l => l.FixtureId == f.Id) ||
                 !db.FixtureEvents.Any(e => e.FixtureId == f.Id) ||
                 db.FixtureEvents.Any(e => e.FixtureId == f.Id && e.PlayerName == null && e.PlayerId == null)))
-            .OrderByDescending(f => f.DateUtc)
+            .OrderBy(f => f.DetailLastAttemptAt != null)
+            .ThenBy(f => f.DetailLastAttemptAt)
+            .ThenByDescending(f => f.DateUtc)
             .Select(f => new { f.Id, f.ExtId, f.Status })
+            .Take(Math.Min(max, 50))
             .ToListAsync(ct);
 
         var targets = candidates
@@ -124,13 +140,24 @@ public sealed class FixtureDetailSyncService(
             .ToList();
 
         logger.LogInformation(
-            "Fixture-detail backfill: {Count} finished fixtures needing details/lineups (cap {Max}).",
+            "Fixture-detail backfill: {Count} finished fixtures needing details/statistics (cap {Max}).",
             targets.Count, max);
 
         foreach (var target in targets)
         {
             ct.ThrowIfCancellationRequested();
-            await SyncFixtureDetailAsync(target.Id, target.ExtId, ct);
+            // Record attempts even on empty/provider failure responses.
+            var fixture = await db.Fixtures.SingleAsync(f => f.Id == target.Id, ct);
+            fixture.DetailLastAttemptAt = DateTime.UtcNow;
+            await db.SaveChangesAsync(ct);
+            try
+            {
+                await SyncFixtureDetailAsync(target.Id, target.ExtId, ct);
+            }
+            catch (Exception ex) when (ex is not OperationCanceledException)
+            {
+                logger.LogWarning(ex, "Fixture-detail backfill failed for {ExtId}; will retry later.", target.ExtId);
+            }
             db.ChangeTracker.Clear();
             await Task.Delay(BackfillDelay, ct);
         }

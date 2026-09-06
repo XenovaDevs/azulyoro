@@ -25,6 +25,7 @@ public static class MatchesEndpoints
         group.MapGet("/{id:guid}/events", GetEvents);
         group.MapGet("/{id:guid}/lineups", GetLineups);
         group.MapGet("/{id:guid}/player-stats", GetPlayerStats);
+        group.MapGet("/{id:guid}/statistics", GetStatistics);
         group.MapPost("/backfill", BackfillMatches);
 
         return app;
@@ -231,9 +232,9 @@ public static class MatchesEndpoints
         // ChannelReader's ReadAllAsync enumerator does not implement disposal;
         // the subscription itself completes and removes the channel below.
         var updates = subscription.ReadAllAsync(ct).GetAsyncEnumerator(ct);
+        var nextUpdate = updates.MoveNextAsync().AsTask();
         while (!ct.IsCancellationRequested)
         {
-            var nextUpdate = updates.MoveNextAsync().AsTask();
             var heartbeat = Task.Delay(TimeSpan.FromSeconds(15), ct);
             var completed = await Task.WhenAny(nextUpdate, heartbeat);
 
@@ -254,6 +255,7 @@ public static class MatchesEndpoints
             {
                 break;
             }
+            nextUpdate = updates.MoveNextAsync().AsTask();
         }
     }
 
@@ -270,7 +272,7 @@ public static class MatchesEndpoints
                 f.Elapsed,
                 f.HomeGoals,
                 f.AwayGoals,
-                Array.Empty<LiveEventUpdate>()))
+                Array.Empty<LiveEventUpdate>(), null))
             .FirstOrDefaultAsync(ct);
 
         if (fixture is null)
@@ -291,7 +293,7 @@ public static class MatchesEndpoints
                 db.Players.Where(p => p.Id == e.AssistPlayerId).Select(p => p.Name).FirstOrDefault()))
             .ToListAsync(ct);
 
-        return fixture with { Events = events };
+        return fixture with { Events = events, TeamStats = await MatchStatistics.ReadAsync(db, id, ct) };
     }
 
     private static Task WriteSseAsync(
@@ -432,5 +434,12 @@ public static class MatchesEndpoints
 
         CacheControl.SetPublicMaxAge(http, 60);
         return Results.Ok(stats);
+    }
+
+    private static async Task<IResult> GetStatistics(HttpContext http, AppDbContext db, Guid id, CancellationToken ct)
+    {
+        http.Response.Headers.CacheControl = "no-store";
+        var statistics = await MatchStatistics.ReadAsync(db, id, ct);
+        return statistics is null ? Results.NotFound() : Results.Ok(statistics);
     }
 }

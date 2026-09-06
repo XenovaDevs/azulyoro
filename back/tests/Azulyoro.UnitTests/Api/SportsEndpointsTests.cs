@@ -1,5 +1,6 @@
 using System.Net;
 using System.Net.Http.Json;
+using System.Text.Json;
 using Azulyoro.Api.Common;
 using Azulyoro.Api.Features.Competitions;
 using Azulyoro.Api.Features.Matches;
@@ -19,6 +20,39 @@ namespace Azulyoro.UnitTests.Api;
 
 public class SportsEndpointsTests
 {
+    [Fact]
+    public async Task StatisticsEndpointAndFinalStreamShareHomeAwayContractWithoutProviderCalls()
+    {
+        await using var host = await SportsHost.StartAsync();
+        var id = await host.SeedStatisticsAsync();
+        using var response = await host.Client.GetAsync($"/api/matches/{id}/statistics");
+        Assert.True(response.Headers.CacheControl!.NoStore);
+        var statistics = (await response.Content.ReadFromJsonAsync<MatchStatisticsDto>())!;
+        Assert.Equal(host.UpdatedAt, statistics.UpdatedAt);
+        Assert.Equal(new MatchStatisticDto("possession", 60, 40), statistics.Statistics.Single(s => s.Key == "possession"));
+        Assert.Equal(new MatchStatisticDto("redCards", 0, null), statistics.Statistics.Single(s => s.Key == "redCards"));
+        using var stream = await host.Client.GetAsync($"/api/matches/{id}/stream");
+        var data = (await stream.Content.ReadAsStringAsync()).Split('\n').Single(line => line.StartsWith("data: "))[6..];
+        using var document = JsonDocument.Parse(data);
+        var streamed = document.RootElement.GetProperty("teamStats").Deserialize<MatchStatisticsDto>(new JsonSerializerOptions(JsonSerializerDefaults.Web))!;
+        Assert.Equal(statistics.UpdatedAt, streamed.UpdatedAt);
+        Assert.Equal(statistics.Statistics, streamed.Statistics);
+        Assert.Equal(0, host.ProviderCalls);
+    }
+
+    [Fact]
+    public async Task StatisticsEndpointDistinguishesUnavailableDataFromUnknownFixture()
+    {
+        await using var host = await SportsHost.StartAsync();
+        var overview = (await host.Client.GetFromJsonAsync<CompetitionOverviewDto>($"/api/competitions/{host.Cup.Id}/overview?season=2026"))!;
+        var result = (await host.Client.GetFromJsonAsync<MatchStatisticsDto>($"/api/matches/{overview.Fixtures[0].Id}/statistics"))!;
+        Assert.Null(result.UpdatedAt);
+        Assert.Empty(result.Statistics);
+        using var missing = await host.Client.GetAsync($"/api/matches/{Guid.NewGuid()}/statistics");
+        Assert.Equal(HttpStatusCode.NotFound, missing.StatusCode);
+        Assert.True(missing.Headers.CacheControl!.NoStore);
+        Assert.Equal(0, host.ProviderCalls);
+    }
     [Fact]
     public async Task CompetitionOverviewIncludesOtherTeamsAndKnockoutScoresForRequestedSeason()
     {
@@ -174,6 +208,20 @@ public class SportsEndpointsTests
                 Snapshot(season, Boca, "Apertura - Group A", 1, 30, 16, 8, 6, 2, 22, 9),
                 Snapshot(season, rival, "Apertura - Group A", 2, 19, 16, 5, 4, 7, 14, 22));
             await db.SaveChangesAsync();
+        }
+
+        public async Task<Guid> SeedStatisticsAsync()
+        {
+            await using var scope = app.Services.CreateAsyncScope();
+            var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            var fixture = await db.Fixtures.FirstAsync(f => f.IsBoca);
+            fixture.TeamStatisticsUpdatedAt = UpdatedAt;
+            db.FixtureTeamStatistics.AddRange(
+                new FixtureTeamStatistic { FixtureId = fixture.Id, TeamId = fixture.AwayTeamId, Key = "possession", Value = 40 },
+                new FixtureTeamStatistic { FixtureId = fixture.Id, TeamId = fixture.HomeTeamId, Key = "possession", Value = 60 },
+                new FixtureTeamStatistic { FixtureId = fixture.Id, TeamId = fixture.HomeTeamId, Key = "redCards", Value = 0 });
+            await db.SaveChangesAsync();
+            return fixture.Id;
         }
 
         private Fixture Game(Competition competition, Season season, Team home, Team away,
