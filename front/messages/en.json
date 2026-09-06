@@ -37,6 +37,8 @@
     "cookies": "Cookies"
   },
   "Common": {
+    "language": "Language",
+    "breadcrumb": "Breadcrumb",
     "home": "Home",
     "vs": "vs",
     "loadingError": "We couldn't load the information."
@@ -128,7 +130,20 @@
     "winner": "Qualified",
     "champion": "Champion",
     "scoreWithPenalties": "{score} goals, {penalties} penalties",
-    "penaltiesLegend": "Superscript: penalty shootout"
+    "penaltiesLegend": "Small numbers: penalties",
+    "scoreShort": "Goals",
+    "timezone": "Argentina time · Select a date for match details",
+    "findBoca": "Find Boca",
+    "viewLabel": "Bracket view",
+    "roundView": "By round",
+    "fullView": "Full bracket",
+    "chooseRound": "View round",
+    "previousRound": "Previous round",
+    "nextRound": "Next round",
+    "zoom": "Bracket size",
+    "roundProgress": "Round {current} of {total} · {count, plural, one {# tie} other {# ties}}",
+    "followTie": "View {round}",
+    "matchDetails": "Match details: {home} versus {away}, {date}"
   },
   "Standings": {
     "title": "Standings",

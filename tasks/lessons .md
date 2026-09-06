@@ -16,3 +16,9 @@
 
 - Mostrar las eliminatorias en un cuadro de llaves conectado por rondas, con resultados y fecha de cada encuentro; no reutilizar las cards del fixture en esa sección.
 - Conservar ida/vuelta, global y penales cuando existan. No inventar cruces ni clasificados cuando los datos estén incompletos.
+
+## 2026-09-06 — Comodidad de las llaves e idioma
+
+- Un cuadro que cabe dentro de un scroll no alcanza: ofrecer navegación por ronda y acceso a Boca, texto legible y controles táctiles de al menos 44 px.
+- Traducir también las etiquetas del proveedor en rondas, filtros y tablas; revisar la pantalla completa en español.
+- Verificar las interacciones a 375, 768, 1024 y 1440 px, sin obligar a recorrer un lienzo gigante para encontrar el cruce actual.

@@ -7,6 +7,7 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { CompetitionSelector } from "@/components/sports/CompetitionSelector";
 import { LiveRefresher } from "@/components/sports/LiveRefresher";
 import { ARGENTINA_TIMEZONE, formatDateInZone } from "@/lib/dateUtils";
+import { sportsCompetitionLabel } from "@/lib/sports-labels";
 
 export const revalidate = 0;
 
@@ -60,7 +61,7 @@ export default async function StandingsPage({
         <>
           <CompetitionSelector competitions={competitions} competitionId={competition.id} season={season} />
           <div className="flex flex-wrap items-baseline justify-between gap-2">
-            <h2 className="font-display text-xl font-semibold">{competition.name} · {season}</h2>
+            <h2 className="font-display text-xl font-semibold">{sportsCompetitionLabel(competition.name, locale)} · {season}</h2>
             <p className="text-xs text-[var(--muted-foreground)]">
               {overview.updatedAt ? t("updatedAt", { date: formatDateInZone(overview.updatedAt, locale, ARGENTINA_TIMEZONE, { dateStyle: "short", timeStyle: "short" }) }) : t("awaitingUpdate")}
             </p>

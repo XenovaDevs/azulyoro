@@ -2,8 +2,9 @@
 
 import { useTransition } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import type { CompetitionDto } from "@/lib/api/types";
+import { sportsCompetitionLabel } from "@/lib/sports-labels";
 
 export function CompetitionSelector({ competitions, competitionId, season }: {
   competitions: CompetitionDto[];
@@ -11,6 +12,7 @@ export function CompetitionSelector({ competitions, competitionId, season }: {
   season: number;
 }) {
   const t = useTranslations("Standings");
+  const locale = useLocale();
   const router = useRouter();
   const pathname = usePathname();
   const [pending, startTransition] = useTransition();
@@ -21,13 +23,13 @@ export function CompetitionSelector({ competitions, competitionId, season }: {
     startTransition(() => router.push(`${pathname}?${new URLSearchParams({ competition: id, season: String(year) })}`, { scroll: false }));
   }
 
-  const selectClass = "w-full rounded-lg border border-[var(--border)] bg-[var(--card)] px-3 py-2.5 text-sm font-medium focus:outline-2 focus:outline-[var(--accent)] disabled:opacity-60";
+  const selectClass = "min-h-11 w-full min-w-0 rounded-lg border border-[var(--border)] bg-[var(--card)] px-3 py-2.5 text-sm font-medium focus:outline-2 focus:outline-[var(--accent)] disabled:opacity-60";
   return (
     <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_10rem]" aria-busy={pending}>
       <label className="flex flex-col gap-1.5 text-xs text-[var(--muted-foreground)]">
         {t("competition")}
         <select aria-label={t("competition")} className={selectClass} value={competitionId} disabled={pending} onChange={(event) => navigate(event.target.value, season)}>
-          {available.map((competition) => <option key={competition.id} value={competition.id}>{competition.name}</option>)}
+          {available.map((competition) => <option key={competition.id} value={competition.id}>{sportsCompetitionLabel(competition.name, locale)}</option>)}
         </select>
       </label>
       <label className="flex flex-col gap-1.5 text-xs text-[var(--muted-foreground)]">

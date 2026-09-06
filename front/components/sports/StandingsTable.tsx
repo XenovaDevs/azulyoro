@@ -9,27 +9,33 @@ function isBocaRow(row: StandingDto, bocaTeamId?: string): boolean {
   return (row.teamName ?? "").toLowerCase().includes("boca");
 }
 
-const FormPips = memo(function FormPips({ form }: { form: string | null }) {
+const FormPips = memo(function FormPips({ form, locale }: { form: string | null; locale: string }) {
+  const t = useTranslations("Standings");
   if (!form) return <span className="text-[var(--muted-foreground)]">—</span>;
+  const isEs = locale.toLowerCase().startsWith("es");
   const color: Record<string, string> = {
     W: "bg-emerald-600",
     D: "bg-amber-500",
     L: "bg-rose-600",
   };
+  const labels: Record<string, { short: string; title: string }> = {
+    W: { short: t("win"), title: isEs ? "Ganado" : "Win" },
+    D: { short: t("draw"), title: isEs ? "Empatado" : "Draw" },
+    L: { short: t("lose"), title: isEs ? "Perdido" : "Loss" },
+  };
+  const results = form.slice(-5).toUpperCase().split("");
   return (
-    <span className="inline-flex gap-1" aria-label={`Forma: ${form.slice(-5)}`}>
-      {form
-        .slice(-5)
-        .split("")
+    <span className="inline-flex gap-1" aria-label={`${t("form")}: ${results.map(result => labels[result]?.title ?? result).join(", ")}`}>
+      {results
         .map((r, i) => (
           <span
             key={i}
-            title={r}
+            title={labels[r]?.title ?? r}
             className={`h-4 w-4 rounded-xs text-[10px] font-bold leading-4 text-white ${
               color[r.toUpperCase()] ?? "bg-[var(--muted)]"
             } text-center shadow-xs select-none`}
           >
-            {r.toUpperCase()}
+            {labels[r]?.short ?? r}
           </span>
         ))}
     </span>
@@ -235,7 +241,7 @@ export const StandingsTable = memo(function StandingsTable({
 
                   {/* Form */}
                   <td className="hidden md:table-cell px-3 py-2.5 text-left border-b border-[var(--border)]">
-                    <FormPips form={row.form} />
+                    <FormPips form={row.form} locale={locale} />
                   </td>
                 </tr>
               );

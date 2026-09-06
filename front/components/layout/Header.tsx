@@ -17,9 +17,9 @@ export function Header() {
 
   return (
     <header className="sticky top-0 z-40 border-b border-[var(--border)] bg-[color-mix(in_oklab,var(--background)_90%,transparent)] backdrop-blur">
-      <div className="mx-auto flex max-w-6xl items-center gap-6 px-4 py-3">
-        <Link href="/" className="text-xl" aria-label="Azul y Oro">
-          <BrandMark />
+      <div className="mx-auto flex max-w-6xl items-center gap-2 px-2 py-2 sm:gap-6 sm:px-4 sm:py-3">
+        <Link href="/" className="inline-flex min-h-11 min-w-11 shrink-0 items-center justify-center text-xl" aria-label="Azul y Oro">
+          <BrandMark compactOnMobile />
         </Link>
 
         <nav className="hidden items-center gap-4 text-sm font-medium lg:flex">
@@ -34,10 +34,10 @@ export function Header() {
           ))}
         </nav>
 
-        <div className="ml-auto flex items-center gap-3">
+        <div className="ml-auto flex shrink-0 items-center gap-1.5 sm:gap-3">
           <Link
             href="/en-vivo"
-            className="inline-flex items-center gap-1.5 rounded-full border border-[color-mix(in_oklab,var(--live)_45%,transparent)] px-2.5 py-1 text-xs font-semibold text-[var(--live)]"
+            className="inline-flex min-h-11 items-center gap-1.5 whitespace-nowrap rounded-full border border-[color-mix(in_oklab,var(--live)_45%,transparent)] px-2 py-1 text-xs font-semibold text-[var(--live)] sm:px-2.5"
           >
             <span
               className="h-2 w-2 rounded-full bg-[var(--live)] motion-safe:animate-pulse"
@@ -48,7 +48,7 @@ export function Header() {
           <LocaleSwitcher />
           <Link
             href="/ingresar"
-            className="rounded-full bg-[var(--primary)] px-3.5 py-1.5 text-sm font-semibold text-[var(--primary-foreground)] transition-opacity hover:opacity-90"
+            className="inline-flex min-h-11 items-center whitespace-nowrap rounded-full bg-[var(--primary)] px-2 py-1.5 text-sm font-semibold text-[var(--primary-foreground)] transition-opacity hover:opacity-90 sm:px-3.5"
           >
             {t("login")}
           </Link>

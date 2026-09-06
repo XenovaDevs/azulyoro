@@ -1,4 +1,5 @@
 import type { ComponentProps } from "react";
+import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 
 type LinkHref = ComponentProps<typeof Link>["href"];
@@ -14,6 +15,7 @@ export interface BreadcrumbItem {
  * The last item is treated as the current page (aria-current, no link).
  */
 export function Breadcrumbs({ items }: { items: BreadcrumbItem[] }) {
+  const t = useTranslations("Common");
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "BreadcrumbList",
@@ -26,7 +28,7 @@ export function Breadcrumbs({ items }: { items: BreadcrumbItem[] }) {
   };
 
   return (
-    <nav aria-label="Breadcrumb" className="text-sm text-[var(--muted-foreground)]">
+    <nav aria-label={t("breadcrumb")} className="text-sm text-[var(--muted-foreground)]">
       <ol className="flex flex-wrap items-center gap-1.5">
         {items.map((item, i) => {
           const isLast = i === items.length - 1;

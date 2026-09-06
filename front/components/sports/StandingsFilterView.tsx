@@ -6,6 +6,7 @@ import type { CompetitionOverviewDto } from "@/lib/api/types";
 import { fixtureGroups, fixturePhase, isKnockoutRound, latestPhase, standingGroups } from "@/lib/competitions";
 import { classifyStatus } from "@/lib/matchStatus";
 import { buildPlayoffBrackets } from "@/lib/playoffs";
+import { sportsPhaseLabel, sportsRoundLabel } from "@/lib/sports-labels";
 import { StandingsTable } from "./StandingsTable";
 import { MatchCard } from "./MatchCard";
 import { PlayoffBracket } from "./PlayoffBracket";
@@ -23,17 +24,7 @@ export function StandingsFilterView({ overview, locale }: { overview: Competitio
     ...overview.standings.map((row) => row.phase),
     ...overview.fixtures.map((match) => fixturePhase(match.round, overview.competition.type)),
   ])].filter(Boolean);
-  const phaseLabel = (value: string) => {
-    switch (value) {
-      case "apertura": return "Apertura";
-      case "clausura": return "Clausura";
-      case "annual": return t("annualTable");
-      case "groups": return t("groupStage");
-      case "playoffs": return t("playoffs");
-      case "league": return t("regularSeason");
-      default: return value;
-    }
-  };
+  const phaseLabel = (value: string) => sportsPhaseLabel(value, locale);
   const tables = useMemo(() => standingGroups(overview.standings.filter((row) => phase === "all" || row.phase === phase)), [overview.standings, phase]);
   const fixtures = useMemo(() => overview.fixtures.filter((match) => {
     const matchPhase = fixturePhase(match.round, overview.competition.type);
@@ -57,14 +48,14 @@ export function StandingsFilterView({ overview, locale }: { overview: Competitio
   const groups = fixtureGroups(regularFixtures.slice(0, visible));
   const shown = Math.min(visible, regularFixtures.length) + playoffFixtures.length;
   const total = regularFixtures.length + playoffFixtures.length;
-  const selectClass = "rounded-lg border border-[var(--border)] bg-[var(--card)] px-3 py-2 text-sm focus:outline-2 focus:outline-[var(--accent)]";
+  const selectClass = "min-h-11 w-full min-w-0 rounded-lg border border-[var(--border)] bg-[var(--card)] px-3 py-2 text-sm focus:outline-2 focus:outline-[var(--accent)]";
 
   return (
-    <div className="flex flex-col gap-7">
+    <div className="flex min-w-0 flex-col gap-7">
       <div className="flex flex-wrap gap-2" role="group" aria-label={t("phase")}>
         {["all", ...phases].map((value) => (
           <button type="button" key={value} aria-pressed={phase === value} onClick={() => { setPhase(value); setStage("all"); setRound("all"); setVisible(30); }}
-            className={`rounded-full border px-4 py-2 text-sm font-semibold transition-colors ${phase === value ? "border-[var(--oro-500)] bg-[var(--oro-500)] text-[var(--azul-900)]" : "border-[var(--border)] hover:border-[var(--accent)]"}`}>
+            className={`min-h-11 rounded-full border px-4 py-2 text-sm font-semibold transition-colors ${phase === value ? "border-[var(--oro-500)] bg-[var(--oro-500)] text-[var(--azul-900)]" : "border-[var(--border)] hover:border-[var(--accent)]"}`}>
             {value === "all" ? t("allPhases") : phaseLabel(value)}
           </button>
         ))}
@@ -74,15 +65,15 @@ export function StandingsFilterView({ overview, locale }: { overview: Competitio
         <section className="flex flex-col gap-6" aria-label={t("title")}>
           {tables.map((table, index) => (
             <div key={`${table.name}-${index}`}>
-              <h2 className="mb-3 font-display text-lg font-semibold">{table.name || phaseLabel(table.rows[0]?.phase ?? "league")}</h2>
+              <h2 className="mb-3 font-display text-lg font-semibold">{sportsRoundLabel(table.name, locale) || phaseLabel(table.rows[0]?.phase ?? "league")}</h2>
               {table.rows.some((row) => row.isProvisional) ? <p className="mb-2 text-xs text-[var(--muted-foreground)]">{t("provisional")}</p> : null}
-              <StandingsTable rows={table.rows} locale={locale} captionTitle={table.name} />
+              <StandingsTable rows={table.rows} locale={locale} captionTitle={sportsRoundLabel(table.name, locale)} />
             </div>
           ))}
         </section>
       ) : <p className="text-sm text-[var(--muted-foreground)]">{t(stage === "playoffs" || phase === "playoffs" || overview.competition.type.toLowerCase() === "cup" ? "knockoutNotice" : "noTableForPhase")}</p>}
 
-      <section className="flex flex-col gap-4" aria-label={t("fixtureTitle")}>
+      <section className="flex min-w-0 flex-col gap-4" aria-label={t("fixtureTitle")}>
         <div>
           <h2 className="font-display text-xl font-semibold">{t("fixtureTitle")}</h2>
           <p className="mt-1 text-sm text-[var(--muted-foreground)]">{t("fixtureDescription")}</p>
@@ -95,7 +86,7 @@ export function StandingsFilterView({ overview, locale }: { overview: Competitio
           </label>
           <label className="flex flex-col gap-1 text-xs text-[var(--muted-foreground)]">{t("round")}
             <select aria-label={t("round")} className={selectClass} value={round} onChange={(event) => { setRound(event.target.value); setVisible(30); }}>
-              <option value="all">{t("allRounds")}</option>{rounds.map((value) => <option key={value} value={value}>{value}</option>)}
+              <option value="all">{t("allRounds")}</option>{rounds.map((value) => <option key={value} value={value}>{sportsRoundLabel(value, locale)}</option>)}
             </select>
           </label>
           <label className="flex flex-col gap-1 text-xs text-[var(--muted-foreground)]">{t("matchStatus")}
@@ -104,12 +95,12 @@ export function StandingsFilterView({ overview, locale }: { overview: Competitio
             </select>
           </label>
         </div>
-        <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={bocaOnly} onChange={(event) => { setBocaOnly(event.target.checked); setRound("all"); setVisible(30); }} className="h-4 w-4 accent-[var(--oro-500)]" />{t("bocaOnly")}</label>
+        <label className="flex min-h-11 cursor-pointer items-center gap-2 text-sm"><input type="checkbox" checked={bocaOnly} onChange={(event) => { setBocaOnly(event.target.checked); setRound("all"); setVisible(30); }} className="h-4 w-4 accent-[var(--oro-500)]" />{t("bocaOnly")}</label>
         <p className="text-xs text-[var(--muted-foreground)]" aria-live="polite">{t("matchCount", { shown, total })}</p>
         {playoffFixtures.length > 0 ? <PlayoffBracket fixtures={playoffFixtures} competitionType={overview.competition.type} locale={locale} /> : null}
         {groups.map((group) => (
           <div key={group.title}>
-            <h3 className="mb-3 font-display text-sm font-semibold text-[var(--accent)]">{group.title || t("roundPending")}</h3>
+            <h3 className="mb-3 font-display text-sm font-semibold text-[var(--accent)]">{sportsRoundLabel(group.title, locale) || t("roundPending")}</h3>
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">{group.matches.map((match) => <MatchCard key={match.id} match={match} locale={locale} linked />)}</div>
           </div>
         ))}

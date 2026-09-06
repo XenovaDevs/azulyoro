@@ -1,7 +1,7 @@
 import type { PlayoffBracket, PlayoffTie } from "./playoffs";
 
-export const BRACKET_COLUMN_WIDTH = 318;
-export const BRACKET_TIE_WIDTH = 270;
+export const BRACKET_COLUMN_WIDTH = 358;
+export const BRACKET_TIE_WIDTH = 310;
 export const BRACKET_HEADER_HEIGHT = 56;
 
 export interface PositionedTie {
@@ -12,7 +12,7 @@ export interface PositionedTie {
 
 /** Center each later round on its confirmed feeders. Unconnected ties keep their own space. */
 export function layoutPlayoffBracket(bracket: PlayoffBracket) {
-  const nodeHeight = bracket.rounds.some(round => round.ties.some(tie => tie.fixtures.length > 1)) ? 184 : 150;
+  const nodeHeight = bracket.rounds.some(round => round.ties.some(tie => tie.fixtures.length > 1)) ? 256 : 208;
   const pitch = nodeHeight + 32;
   const incoming = new Map<string, string[]>();
   for (const connection of bracket.connections) {

@@ -1,5 +1,7 @@
 # Corrección de competiciones y posiciones — 2026-09-05
 
+Actualización 2026-09-06: completada la mejora de comodidad, adaptación móvil e idioma de las llaves. Plan y evidencia de las 29 pruebas, build y revisión en navegador en [playoffs-ux.md](playoffs-ux.md).
+
 - [x] Diagnosticar datos publicados, agrupación de torneos, sincronización y cachés.
 - [x] Sincronizar las competiciones de Boca y sus fixtures completos, grupos y eliminatorias; conservar datos ante errores del proveedor.
 - [x] Separar Apertura/Clausura y tabla anual sin duplicar equipos ni sumar playoffs; ordenar cada tabla y actualizar resultados sin doble conteo.

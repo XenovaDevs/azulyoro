@@ -4,6 +4,7 @@ import { useTranslations } from "next-intl";
 import type { MatchDto } from "@/lib/api/types";
 import { classifyStatus, statusTranslationKey } from "@/lib/matchStatus";
 import { matchSlug } from "@/lib/slug";
+import { sportsCompetitionLabel, sportsRoundLabel } from "@/lib/sports-labels";
 import { Link } from "@/i18n/navigation";
 import { LiveScoreBadge } from "./LiveScoreBadge";
 import { MatchKickoffTime } from "./MatchKickoffTime";
@@ -76,7 +77,7 @@ export function MatchCard({
     >
       <div className="mb-3 flex items-center justify-between gap-2">
         <span className="truncate text-xs font-medium uppercase tracking-wide text-[var(--muted-foreground)]">
-          {match.competitionName ?? ""}
+          {sportsCompetitionLabel(match.competitionName, locale)}
         </span>
         {state === "live" ? (
           <LiveScoreBadge label={t("live")} />
@@ -103,7 +104,7 @@ export function MatchCard({
       </div>
 
       <div className="mt-3 text-xs text-[var(--muted-foreground)]">
-        {match.round ? <p className="mb-1">{match.round}</p> : null}
+        {match.round ? <p className="mb-1">{sportsRoundLabel(match.round, locale)}</p> : null}
         <MatchKickoffTime dateUtc={match.dateUtc} locale={locale} variant="short" />
         {match.penaltyHome != null && match.penaltyAway != null ? (
           <p className="mt-1">{t("penalties")}: {match.penaltyHome} – {match.penaltyAway}</p>

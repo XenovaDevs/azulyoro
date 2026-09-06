@@ -11,6 +11,7 @@ registerHooks({
 });
 const { buildPlayoffBrackets } = await import("../lib/playoffs.ts");
 const { layoutPlayoffBracket, BRACKET_TIE_WIDTH } = await import("../lib/playoff-layout.ts");
+const { preferredPlayoffTie } = await import("../lib/playoff-navigation.ts");
 
 function match(id, overrides = {}) {
   return { id, extId: 1, competitionId: "cup", competitionName: "Copa Argentina", season: 2026,
@@ -19,6 +20,53 @@ function match(id, overrides = {}) {
     dateUtc: "2026-05-01T20:00:00Z", status: "Finished", round: "Quarter-finals", isBoca: true,
     penaltyHome: null, penaltyAway: null, lastSyncedAt: null, ...overrides };
 }
+
+test("bracket landing prefers live action while Find Boca stays within Boca ties", () => {
+  const [bracket] = buildPlayoffBrackets([
+    match("live-other", { homeTeamId: "a", awayTeamId: "b", isBoca: false, status: "SecondHalf" }),
+    match("next-boca", { status: "NotStarted", homeGoals: null, awayGoals: null, round: "Semi-finals" }),
+  ], "Cup");
+  assert.equal(preferredPlayoffTie(bracket).tie.fixtures[0].id, "live-other");
+  assert.equal(preferredPlayoffTie(bracket, true).tie.fixtures[0].id, "next-boca");
+});
+
+test("next Boca tie is preferred to other teams' earlier scheduled ties", () => {
+  const [bracket] = buildPlayoffBrackets([
+    match("earlier-other", { homeTeamId: "a", awayTeamId: "b", isBoca: false, status: "NotStarted", dateUtc: "2026-09-06T20:00:00Z" }),
+    match("later-boca", { status: "NotStarted", dateUtc: "2026-09-12T20:00:00Z", round: "Semi-finals" }),
+    match("latest-boca", { status: "NotStarted", dateUtc: "2026-09-19T20:00:00Z", round: "Final" }),
+  ], "Cup");
+  const before = structuredClone(bracket);
+  assert.equal(preferredPlayoffTie(bracket).tie.fixtures[0].id, "later-boca");
+  assert.deepEqual(bracket, before);
+});
+
+test("upcoming return leg selects its complete tie rather than the old first leg date", () => {
+  const [bracket] = buildPlayoffBrackets([
+    match("first", { round: "Quarter-finals - 1st Leg", dateUtc: "2026-09-01T20:00:00Z" }),
+    match("return", { round: "Quarter-finals - 2nd Leg", dateUtc: "2026-09-08T20:00:00Z", status: "NotStarted",
+      homeGoals: null, awayGoals: null, homeTeamId: "rival", awayTeamId: "boca" }),
+    match("later", { round: "Semi-finals", dateUtc: "2026-09-15T20:00:00Z", status: "NotStarted" }),
+  ], "Cup");
+  const selected = preferredPlayoffTie(bracket, true);
+  assert.equal(selected.round.stage, "quarterfinal");
+  assert.deepEqual(selected.tie.fixtures.map(fixture => fixture.id), ["first", "return"]);
+});
+
+test("completed tournaments open the latest round and Find Boca retains its last tie", () => {
+  const [bracket] = buildPlayoffBrackets([
+    match("boca-out", { round: "Quarter-finals" }),
+    match("final-other", { round: "Final", homeTeamId: "a", awayTeamId: "b", isBoca: false }),
+  ], "Cup");
+  assert.equal(preferredPlayoffTie(bracket).round.stage, "final");
+  assert.equal(preferredPlayoffTie(bracket, true).tie.fixtures[0].id, "boca-out");
+});
+
+test("empty brackets and brackets without Boca do not invent a focus destination", () => {
+  const [bracket] = buildPlayoffBrackets([match("other", { homeTeamId: "a", awayTeamId: "b", isBoca: false })], "Cup");
+  assert.equal(preferredPlayoffTie(bracket, true), undefined);
+  assert.equal(preferredPlayoffTie({ ...bracket, rounds: [] }), undefined);
+});
 
 test("knockout progression follows round size, not API order or kickoff dates", () => {
   const rounds = ["Final", "Round of 16", "Semi-finals", "Round of 64", "Quarter-finals", "Round of 32"];
