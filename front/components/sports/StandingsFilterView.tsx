@@ -3,10 +3,12 @@
 import { useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
 import type { CompetitionOverviewDto } from "@/lib/api/types";
-import { aggregateTies, fixtureGroups, fixturePhase, isKnockoutRound, latestPhase, standingGroups } from "@/lib/competitions";
+import { fixtureGroups, fixturePhase, isKnockoutRound, latestPhase, standingGroups } from "@/lib/competitions";
 import { classifyStatus } from "@/lib/matchStatus";
+import { buildPlayoffBrackets } from "@/lib/playoffs";
 import { StandingsTable } from "./StandingsTable";
 import { MatchCard } from "./MatchCard";
+import { PlayoffBracket } from "./PlayoffBracket";
 import { EmptyState } from "@/components/ui/EmptyState";
 
 export function StandingsFilterView({ overview, locale }: { overview: CompetitionOverviewDto; locale: string }) {
@@ -46,7 +48,15 @@ export function StandingsFilterView({ overview, locale }: { overview: Competitio
   const selectedFixtures = fixtures.filter((match) => (round === "all" || match.round === round)
     && (status === "all" || classifyStatus(match.status) === status));
   if (status === "finished") selectedFixtures.reverse();
-  const groups = fixtureGroups(selectedFixtures.slice(0, visible));
+  const regularFixtures = selectedFixtures.filter(match => !isKnockoutRound(match.round, overview.competition.type));
+  const selectedPlayoffs = new Set(selectedFixtures.filter(match => isKnockoutRound(match.round, overview.competition.type)).map(match => match.id));
+  // Keep both legs of a selected tie, even when a status filter matches only one.
+  const playoffFixtures = buildPlayoffBrackets(fixtures, overview.competition.type).flatMap(bracket =>
+    bracket.rounds.flatMap(round => round.ties.filter(tie => tie.fixtures.some(match => selectedPlayoffs.has(match.id)))
+      .flatMap(tie => tie.fixtures)));
+  const groups = fixtureGroups(regularFixtures.slice(0, visible));
+  const shown = Math.min(visible, regularFixtures.length) + playoffFixtures.length;
+  const total = regularFixtures.length + playoffFixtures.length;
   const selectClass = "rounded-lg border border-[var(--border)] bg-[var(--card)] px-3 py-2 text-sm focus:outline-2 focus:outline-[var(--accent)]";
 
   return (
@@ -95,17 +105,16 @@ export function StandingsFilterView({ overview, locale }: { overview: Competitio
           </label>
         </div>
         <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={bocaOnly} onChange={(event) => { setBocaOnly(event.target.checked); setRound("all"); setVisible(30); }} className="h-4 w-4 accent-[var(--oro-500)]" />{t("bocaOnly")}</label>
-        <p className="text-xs text-[var(--muted-foreground)]" aria-live="polite">{t("matchCount", { shown: Math.min(visible, selectedFixtures.length), total: selectedFixtures.length })}</p>
-        {groups.length ? groups.map((group) => (
+        <p className="text-xs text-[var(--muted-foreground)]" aria-live="polite">{t("matchCount", { shown, total })}</p>
+        {playoffFixtures.length > 0 ? <PlayoffBracket fixtures={playoffFixtures} competitionType={overview.competition.type} locale={locale} /> : null}
+        {groups.map((group) => (
           <div key={group.title}>
             <h3 className="mb-3 font-display text-sm font-semibold text-[var(--accent)]">{group.title || t("roundPending")}</h3>
-            {isKnockoutRound(group.title, overview.competition.type) ? aggregateTies(overview.fixtures.filter((match) => match.round === group.title && (!bocaOnly || match.isBoca))).map((tie) => (
-              <p key={tie.id} className="mb-3 rounded-lg bg-[var(--muted)] px-3 py-2 text-sm"><span className="font-semibold">{t("aggregate")}:</span> {tie.homeName} {tie.homeGoals} – {tie.awayGoals} {tie.awayName}</p>
-            )) : null}
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">{group.matches.map((match) => <MatchCard key={match.id} match={match} locale={locale} linked />)}</div>
           </div>
-        )) : <EmptyState title={t("noFixtures")} description={t("noFixturesDescription")} />}
-        {visible < selectedFixtures.length ? <button type="button" onClick={() => setVisible((count) => count + 30)} className="self-center rounded-full border border-[var(--border)] px-5 py-2.5 text-sm font-semibold hover:border-[var(--accent)]">{t("loadMore")}</button> : null}
+        ))}
+        {total === 0 ? <EmptyState title={t("noFixtures")} description={t("noFixturesDescription")} /> : null}
+        {visible < regularFixtures.length ? <button type="button" onClick={() => setVisible((count) => count + 30)} className="self-center rounded-full border border-[var(--border)] px-5 py-2.5 text-sm font-semibold hover:border-[var(--accent)]">{t("loadMore")}</button> : null}
       </section>
     </div>
   );
