@@ -24,6 +24,7 @@ export function MatchForumTab({
   const [content, setContent] = useState<string>("");
   const [submitting, setSubmitting] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
+  const [unauthorized, setUnauthorized] = useState<boolean>(false);
   const [success, setSuccess] = useState<boolean>(false);
 
   useEffect(() => {
@@ -48,12 +49,16 @@ export function MatchForumTab({
 
     setSubmitting(true);
     setError(null);
+    setUnauthorized(false);
     setSuccess(false);
 
     const res = await createPost(topic.id, content.trim());
     setSubmitting(false);
 
     if (!res.ok) {
+      if (res.unauthorized) {
+        setUnauthorized(true);
+      }
       setError(res.error || (isEs ? "Error al publicar tu mensaje." : "Failed to post reply."));
       return;
     }
@@ -122,11 +127,38 @@ export function MatchForumTab({
             className="w-full rounded-lg border border-[var(--border)] bg-[var(--background)] p-3 text-sm text-[var(--foreground)] placeholder:text-[var(--muted-foreground)] focus:border-[var(--accent)] focus:outline-none focus:ring-1 focus:ring-[var(--accent)]"
           />
 
-          {error && (
+          {unauthorized ? (
+            <div className="rounded-xl border border-[var(--oro-500)]/40 bg-[var(--oro-500)]/10 p-3.5 sm:p-4 text-xs">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                <div className="flex items-center gap-2 text-[var(--foreground)]">
+                  <span className="text-base">🔒</span>
+                  <span>
+                    {isEs
+                      ? "Debés iniciar sesión o registrarte para publicar comentarios."
+                      : "You must sign in or register to post comments."}
+                  </span>
+                </div>
+                <div className="flex items-center gap-2 shrink-0">
+                  <Link
+                    href={`/${locale}/ingresar`}
+                    className="rounded-lg bg-[var(--accent)] px-3 py-1.5 font-bold text-white hover:opacity-90 transition-opacity text-xs"
+                  >
+                    {isEs ? "Iniciar Sesión" : "Sign In"}
+                  </Link>
+                  <Link
+                    href={`/${locale}/registrarse`}
+                    className="rounded-lg border border-[var(--border)] bg-[var(--card)] px-3 py-1.5 font-bold text-[var(--foreground)] hover:bg-[var(--muted)] transition-colors text-xs"
+                  >
+                    {isEs ? "Registrarse" : "Register"}
+                  </Link>
+                </div>
+              </div>
+            </div>
+          ) : error ? (
             <div className="rounded-md bg-rose-500/15 border border-rose-500/30 p-2.5 text-xs text-rose-400">
               {error}
             </div>
-          )}
+          ) : null}
 
           {success && (
             <div className="rounded-md bg-emerald-500/15 border border-emerald-500/30 p-2.5 text-xs text-emerald-400">

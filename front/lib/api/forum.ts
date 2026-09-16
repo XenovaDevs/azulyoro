@@ -106,7 +106,7 @@ export async function createTopic(data: {
   matchId?: string | null;
   title: string;
   content: string;
-}): Promise<{ ok: boolean; data?: any; error?: string }> {
+}): Promise<{ ok: boolean; data?: any; error?: string; unauthorized?: boolean }> {
   try {
     const res = await fetch(`${API_BASE}/api/forum/topics`, {
       method: "POST",
@@ -114,6 +114,14 @@ export async function createTopic(data: {
       credentials: "include",
       body: JSON.stringify(data),
     });
+
+    if (res.status === 401) {
+      return {
+        ok: false,
+        unauthorized: true,
+        error: "Debes iniciar sesión o registrarte para publicar en el foro.",
+      };
+    }
 
     const json = await res.json().catch(() => ({}));
     if (!res.ok) {
@@ -131,7 +139,7 @@ export async function createTopic(data: {
 export async function createPost(
   topicId: string,
   content: string,
-): Promise<{ ok: boolean; data?: ForumPostDto; error?: string }> {
+): Promise<{ ok: boolean; data?: ForumPostDto; error?: string; unauthorized?: boolean }> {
   try {
     const res = await fetch(`${API_BASE}/api/forum/topics/${encodeURIComponent(topicId)}/posts`, {
       method: "POST",
@@ -139,6 +147,14 @@ export async function createPost(
       credentials: "include",
       body: JSON.stringify({ content }),
     });
+
+    if (res.status === 401) {
+      return {
+        ok: false,
+        unauthorized: true,
+        error: "Debes iniciar sesión o registrarte para publicar un comentario.",
+      };
+    }
 
     const json = await res.json().catch(() => ({}));
     if (!res.ok) {

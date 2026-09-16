@@ -27,6 +27,7 @@ function CreateTopicForm({
   const [content, setContent] = useState<string>("");
   const [submitting, setSubmitting] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
+  const [unauthorized, setUnauthorized] = useState<boolean>(false);
 
   useEffect(() => {
     let active = true;
@@ -53,6 +54,7 @@ function CreateTopicForm({
 
     setSubmitting(true);
     setError(null);
+    setUnauthorized(false);
 
     const res = await createTopic({
       categoryId,
@@ -63,6 +65,9 @@ function CreateTopicForm({
     setSubmitting(false);
 
     if (!res.ok) {
+      if (res.unauthorized) {
+        setUnauthorized(true);
+      }
       setError(res.error || (isEs ? "Error al crear el tema." : "Failed to create topic."));
       return;
     }
@@ -94,11 +99,38 @@ function CreateTopicForm({
             : "Share your thoughts, analysis, or question with the Boca Juniors community."}
         </p>
 
-        {error && (
+        {unauthorized ? (
+          <div className="mb-4 rounded-xl border border-[var(--oro-500)]/40 bg-[var(--oro-500)]/10 p-3.5 sm:p-4 text-xs sm:text-sm">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+              <div className="flex items-center gap-2 text-[var(--foreground)]">
+                <span className="text-base">🔒</span>
+                <span>
+                  {isEs
+                    ? "Debés iniciar sesión o registrarte para crear un tema de debate."
+                    : "You must sign in or register to start a new topic."}
+                </span>
+              </div>
+              <div className="flex items-center gap-2 shrink-0">
+                <Link
+                  href={`/${locale}/ingresar`}
+                  className="rounded-lg bg-[var(--accent)] px-3.5 py-1.5 font-bold text-white hover:opacity-90 transition-opacity text-xs"
+                >
+                  {isEs ? "Iniciar Sesión" : "Sign In"}
+                </Link>
+                <Link
+                  href={`/${locale}/registrarse`}
+                  className="rounded-lg border border-[var(--border)] bg-[var(--card)] px-3.5 py-1.5 font-bold text-[var(--foreground)] hover:bg-[var(--muted)] transition-colors text-xs"
+                >
+                  {isEs ? "Registrarse" : "Register"}
+                </Link>
+              </div>
+            </div>
+          </div>
+        ) : error ? (
           <div className="mb-4 rounded-xl border border-rose-500/30 bg-rose-500/15 p-4 text-xs sm:text-sm text-rose-400">
             {error}
           </div>
-        )}
+        ) : null}
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-5">
           <div>
