@@ -72,7 +72,7 @@ export default async function ForumTopicDetailPage({
             </span>
           )}
         </div>
-        <h1 className="font-display text-2xl sm:text-3xl font-black text-[var(--foreground)]">
+        <h1 className="font-display text-xl sm:text-3xl font-black text-[var(--foreground)] break-words">
           {topic.title}
         </h1>
       </div>

@@ -79,7 +79,7 @@ export function MatchForumTab({
   return (
     <div className="flex flex-col gap-6">
       {/* Header banner with match forum link */}
-      <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-[var(--border)] bg-[var(--card)] p-4 shadow-sm">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 rounded-xl border border-[var(--border)] bg-[var(--card)] p-3.5 sm:p-4 shadow-sm">
         <div>
           <h3 className="font-display text-base font-bold text-[var(--foreground)]">
             {isEs ? "Debate del Partido" : "Match Discussion"}
@@ -94,7 +94,7 @@ export function MatchForumTab({
         {topic && (
           <Link
             href={`/${locale}/foro/tema/${topic.slug || topic.id}`}
-            className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--border)] bg-[var(--muted)] px-3 py-1.5 text-xs font-semibold text-[var(--foreground)] hover:bg-[var(--accent)] hover:text-white transition-colors"
+            className="inline-flex shrink-0 items-center justify-center gap-1.5 rounded-lg border border-[var(--border)] bg-[var(--muted)] px-3 py-2 text-xs font-semibold text-[var(--foreground)] hover:bg-[var(--accent)] hover:text-white transition-colors"
           >
             <span>{isEs ? "Ver hilo completo en el Foro" : "Open full thread in Forum"}</span>
             <span>↗</span>
@@ -103,7 +103,7 @@ export function MatchForumTab({
       </div>
 
       {/* Direct comment form (User requirement: link/write directly in match detail) */}
-      <div className="rounded-xl border border-[var(--border)] bg-[var(--card)] p-4 shadow-sm sm:p-5">
+      <div className="rounded-xl border border-[var(--border)] bg-[var(--card)] p-3.5 shadow-sm sm:p-5">
         <h4 className="mb-3 font-display text-sm font-semibold uppercase tracking-wider text-[var(--oro-500)]">
           {isEs ? "Escribir en el foro de este partido" : "Write in this match forum"}
         </h4>
@@ -134,7 +134,7 @@ export function MatchForumTab({
             </div>
           )}
 
-          <div className="flex items-center justify-between">
+          <div className="flex flex-wrap items-center justify-between gap-2 pt-1">
             <span className="text-xs text-[var(--muted-foreground)]">
               {isEs
                 ? "Respetá las normas comunitarias del club."

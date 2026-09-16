@@ -48,7 +48,7 @@ export default async function ForumCategoryPage({
       />
 
       {/* Category Header */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between rounded-2xl border border-[var(--border)] bg-[var(--card)] p-6 shadow-sm">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between rounded-2xl border border-[var(--border)] bg-[var(--card)] p-4 sm:p-6 shadow-sm">
         <div>
           <span className="text-xs font-bold uppercase tracking-wider text-[var(--oro-500)]">
             {isEs ? "Categoría del Foro" : "Forum Category"}
@@ -99,7 +99,7 @@ export default async function ForumCategoryPage({
             {topics.map((topic) => (
               <div
                 key={topic.id}
-                className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 hover:bg-[color-mix(in_oklab,var(--foreground)_3%,var(--card))] transition-colors"
+                className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 sm:gap-3 p-3.5 sm:p-4 hover:bg-[color-mix(in_oklab,var(--foreground)_3%,var(--card))] transition-colors"
               >
                 <div className="flex min-w-0 flex-1 items-start gap-3">
                   <span className="text-lg shrink-0 mt-0.5">
@@ -137,7 +137,7 @@ export default async function ForumCategoryPage({
                   </div>
                 </div>
 
-                <div className="flex shrink-0 items-center gap-4 text-xs text-[var(--muted-foreground)] pl-8 sm:pl-0">
+                <div className="flex flex-wrap items-center gap-3 sm:gap-4 text-xs text-[var(--muted-foreground)] pl-8 sm:pl-0">
                   <div className="flex items-center gap-1">
                     <span>💬</span>
                     <span className="tabular-nums font-bold text-[var(--foreground)]">{topic.postsCount}</span>

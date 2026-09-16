@@ -73,7 +73,7 @@ export function MatchDetailTabs({
               role="tab"
               aria-selected={isActive}
               onClick={() => setActiveTab(tab.key)}
-              className={`flex min-h-10 cursor-pointer items-center justify-center gap-2 rounded-lg px-3.5 py-2 text-xs sm:text-sm font-semibold transition-all focus-visible:outline-2 focus-visible:outline-[var(--accent)] whitespace-nowrap ${
+              className={`flex shrink-0 min-h-10 cursor-pointer items-center justify-center gap-1.5 sm:gap-2 rounded-lg px-2.5 sm:px-3.5 py-2 text-xs sm:text-sm font-semibold transition-all focus-visible:outline-2 focus-visible:outline-[var(--accent)] whitespace-nowrap ${
                 isActive
                   ? "bg-[var(--accent)] text-white shadow-sm"
                   : "text-[var(--muted-foreground)] hover:bg-[color-mix(in_oklab,var(--foreground)_6%,transparent)] hover:text-[var(--foreground)]"
@@ -109,12 +109,12 @@ export function MatchDetailTabs({
           />
 
           {stats.length > 0 && (
-            <section className="rounded-xl border border-[var(--border)] bg-[var(--card)] p-4 shadow-sm sm:p-5">
+            <section className="rounded-xl border border-[var(--border)] bg-[var(--card)] p-3.5 sm:p-5 shadow-sm">
               <h3 className="mb-3 font-display text-base font-bold text-[var(--foreground)]">
                 {labels.playerStats}
               </h3>
               <div className="overflow-x-auto rounded-lg border border-[var(--border)]">
-                <table className="w-full text-sm">
+                <table className="w-full min-w-[340px] text-sm">
                   <thead className="bg-[var(--muted)] text-left text-xs uppercase tracking-wide text-[var(--muted-foreground)]">
                     <tr>
                       <th className="px-3 py-2">{labels.player}</th>

@@ -47,11 +47,11 @@ export default async function Home({
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(teamJsonLd) }}
       />
-      <section className="hero-band rounded-2xl border border-[var(--border)] px-6 py-12 text-center shadow-lg sm:px-10 sm:py-16">
+      <section className="hero-band rounded-2xl border border-[var(--border)] px-4 py-8 text-center shadow-lg sm:px-10 sm:py-16">
         <p className="mb-3 text-xs font-semibold uppercase tracking-[0.2em] text-[var(--oro-400)]">
           {t("heroKicker")}
         </p>
-        <h1 className="font-display text-4xl font-bold tracking-tight text-white sm:text-6xl">
+        <h1 className="font-display text-3xl font-bold tracking-tight text-white sm:text-6xl">
           {t("title")}
         </h1>
         <p className="mx-auto mt-4 max-w-xl text-lg text-[color-mix(in_oklab,white_82%,transparent)]">

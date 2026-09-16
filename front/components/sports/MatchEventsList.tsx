@@ -185,10 +185,10 @@ export function MatchEventsList({
         return (
           <li
             key={i}
-            className="grid min-w-0 grid-cols-[2.5rem_1.25rem_minmax(0,1fr)] items-start gap-x-2 gap-y-1 rounded-xl border border-[var(--border)] bg-[var(--card)] px-3 py-3 text-sm [overflow-wrap:anywhere] transition-colors hover:bg-[color-mix(in_oklab,var(--foreground)_3%,var(--card))]"
+            className="grid min-w-0 grid-cols-[2.25rem_1.25rem_minmax(0,1fr)] sm:grid-cols-[2.5rem_1.25rem_minmax(0,1fr)] items-start gap-x-1.5 sm:gap-x-2 gap-y-1 rounded-xl border border-[var(--border)] bg-[var(--card)] px-2.5 sm:px-3 py-2.5 sm:py-3 text-xs sm:text-sm [overflow-wrap:anywhere] transition-colors hover:bg-[color-mix(in_oklab,var(--foreground)_3%,var(--card))]"
           >
             {/* Minute */}
-            <span className="tabular-nums font-bold text-[var(--accent)] text-sm">
+            <span className="tabular-nums font-bold text-[var(--accent)] text-xs sm:text-sm">
               {e.minute}
               {e.extraMinute ? `+${e.extraMinute}` : ""}&apos;
             </span>
@@ -201,7 +201,7 @@ export function MatchEventsList({
             {/* Event Content with Player Avatars */}
             <div className="flex min-w-0 flex-1 flex-col gap-1 sm:flex-row sm:items-center sm:gap-3">
               {isSub ? (
-                <div className="flex flex-wrap items-center gap-3 font-medium">
+                <div className="flex flex-wrap items-center gap-2 sm:gap-3 font-medium">
                   {/* Player In */}
                   <span className="inline-flex max-w-full flex-wrap items-center gap-1.5 text-emerald-400 font-semibold">
                     <span className="h-2 w-2 rounded-full bg-emerald-500 inline-block" />

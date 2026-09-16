@@ -174,7 +174,7 @@ export function TopicDiscussionView({
                   )}
                 </div>
 
-                <p className="text-sm text-[var(--foreground)] whitespace-pre-wrap leading-relaxed pl-8">
+                <p className="mt-1 text-sm text-[var(--foreground)] whitespace-pre-wrap leading-relaxed pl-0 sm:pl-8">
                   {post.content}
                 </p>
               </div>
@@ -184,7 +184,7 @@ export function TopicDiscussionView({
       </section>
 
       {/* Reply Form */}
-      <section className="rounded-2xl border border-[var(--border)] bg-[var(--card)] p-5 shadow-sm sm:p-6">
+      <section className="rounded-2xl border border-[var(--border)] bg-[var(--card)] p-4 shadow-sm sm:p-6">
         <h3 className="mb-3 font-display text-sm font-semibold uppercase tracking-wider text-[var(--oro-500)]">
           {isEs ? "Dejar tu Respuesta" : "Leave a Reply"}
         </h3>
@@ -220,7 +220,7 @@ export function TopicDiscussionView({
               </div>
             )}
 
-            <div className="flex items-center justify-between pt-1">
+            <div className="flex flex-wrap items-center justify-between gap-2 pt-1">
               <span className="text-xs text-[var(--muted-foreground)]">
                 {isEs ? "Participá cumpliendo las normas del foro." : "Follow community rules."}
               </span>

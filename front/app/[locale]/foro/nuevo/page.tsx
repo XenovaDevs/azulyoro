@@ -1,13 +1,13 @@
 "use client";
 
-import { useEffect, useState, use } from "react";
+import { useEffect, useState, use, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { createTopic, getForumCategories } from "@/lib/api/forum";
 import type { ForumCategoryDto } from "@/lib/api/types";
 import { Breadcrumbs } from "@/components/sports/Breadcrumbs";
 
-export default function CreateTopicPage({
+function CreateTopicForm({
   params,
 }: {
   params: Promise<{ locale: string }>;
@@ -84,7 +84,7 @@ export default function CreateTopicPage({
         ]}
       />
 
-      <div className="rounded-2xl border border-[var(--border)] bg-[var(--card)] p-6 shadow-sm sm:p-8">
+      <div className="rounded-2xl border border-[var(--border)] bg-[var(--card)] p-4 shadow-sm sm:p-8">
         <h1 className="mb-2 font-display text-2xl font-bold text-[var(--foreground)]">
           {isEs ? "Iniciar Nuevo Debate" : "Start New Topic"}
         </h1>
@@ -154,7 +154,7 @@ export default function CreateTopicPage({
             />
           </div>
 
-          <div className="flex items-center justify-between pt-2">
+          <div className="flex flex-wrap items-center justify-between gap-3 pt-2">
             <Link
               href={`/${locale}/foro`}
               className="text-xs font-semibold text-[var(--muted-foreground)] hover:text-[var(--foreground)]"
@@ -175,5 +175,17 @@ export default function CreateTopicPage({
         </form>
       </div>
     </main>
+  );
+}
+
+export default function CreateTopicPage({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}) {
+  return (
+    <Suspense fallback={<div className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-6 px-4 py-8 animate-pulse" />}>
+      <CreateTopicForm params={params} />
+    </Suspense>
   );
 }

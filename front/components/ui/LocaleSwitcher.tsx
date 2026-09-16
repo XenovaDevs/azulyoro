@@ -36,7 +36,7 @@ export function LocaleSwitcher() {
                 { locale },
               )
             }
-            className={`min-h-11 min-w-11 cursor-pointer rounded-full px-2 py-1 text-sm font-medium transition-colors disabled:cursor-default focus-visible:outline-2 focus-visible:outline-[var(--accent)] ${
+            className={`min-h-9 min-w-8 sm:min-h-11 sm:min-w-11 cursor-pointer rounded-full px-1.5 sm:px-2 py-1 text-xs sm:text-sm font-medium transition-colors disabled:cursor-default focus-visible:outline-2 focus-visible:outline-[var(--accent)] ${
               isActive
                 ? "bg-[var(--primary)] text-[var(--primary-foreground)]"
                 : "text-[var(--foreground)] hover:bg-[var(--muted)]"

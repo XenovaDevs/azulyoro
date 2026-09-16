@@ -154,37 +154,37 @@ export default async function MatchDetailPage({
       ) : (
         <>
       {/* Scoreboard */}
-      <section className="overflow-hidden rounded-2xl border border-[var(--border)] bg-gradient-to-b from-[var(--azul-900)] to-[var(--card)] p-4 text-[var(--foreground)] shadow-lg sm:p-6">
-        <div className="mb-6 flex items-center justify-between gap-2 text-xs font-semibold uppercase tracking-wide">
-          <span className="text-[var(--oro-500)]">{sportsCompetitionLabel(match.competitionName, locale)}</span>
-          <span className="text-[var(--muted-foreground)]">{t(statusTranslationKey(match.status))}</span>
+      <section className="overflow-hidden rounded-2xl border border-[var(--border)] bg-gradient-to-b from-[var(--azul-900)] to-[var(--card)] p-3.5 sm:p-6 text-[var(--foreground)] shadow-lg">
+        <div className="mb-4 sm:mb-6 flex items-center justify-between gap-2 text-[11px] sm:text-xs font-semibold uppercase tracking-wide">
+          <span className="text-[var(--oro-500)] truncate max-w-[65%]">{sportsCompetitionLabel(match.competitionName, locale)}</span>
+          <span className="text-[var(--muted-foreground)] shrink-0">{t(statusTranslationKey(match.status))}</span>
         </div>
 
-        <div className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2 sm:gap-4">
-          <div className="flex flex-col items-center gap-2 text-center">
+        <div className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-1 sm:gap-4">
+          <div className="flex flex-col items-center gap-1.5 sm:gap-2 text-center">
             <TeamCrest name={match.homeTeamName} logoUrl={match.homeTeamLogoUrl} />
-            <span className="max-w-full break-words font-display text-sm font-semibold sm:text-base">
+            <span className="max-w-full break-words font-display text-xs font-semibold sm:text-base">
               {match.homeTeamName}
             </span>
           </div>
 
-          <div className="px-2 text-center">
-            <div className="tabular-nums text-3xl font-bold sm:text-5xl">
+          <div className="px-1 sm:px-2 text-center">
+            <div className="tabular-nums text-2xl font-bold sm:text-5xl">
               {played ? `${match.homeGoals ?? "—"} : ${match.awayGoals ?? "—"}` : "vs"}
             </div>
             {played && detail && (detail.htHome != null || detail.htAway != null) && (
-              <div className="mt-1 text-xs text-[var(--muted-foreground)]">
+              <div className="mt-1 text-[11px] sm:text-xs text-[var(--muted-foreground)]">
                 {locale === "es" ? "Entretiempo" : "Half-time"} {detail.htHome ?? "—"}-{detail.htAway ?? "—"}
               </div>
             )}
             {match.penaltyHome != null && match.penaltyAway != null ? (
-              <p className="mt-2 text-sm font-semibold">{t("penalties")}: {match.penaltyHome} – {match.penaltyAway}</p>
+              <p className="mt-1.5 text-xs sm:text-sm font-semibold">{t("penalties")}: {match.penaltyHome} – {match.penaltyAway}</p>
             ) : null}
           </div>
 
-          <div className="flex flex-col items-center gap-2 text-center">
+          <div className="flex flex-col items-center gap-1.5 sm:gap-2 text-center">
             <TeamCrest name={match.awayTeamName} logoUrl={match.awayTeamLogoUrl} />
-            <span className="max-w-full break-words font-display text-sm font-semibold sm:text-base">
+            <span className="max-w-full break-words font-display text-xs font-semibold sm:text-base">
               {match.awayTeamName}
             </span>
           </div>

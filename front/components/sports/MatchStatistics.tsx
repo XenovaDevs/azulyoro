@@ -45,9 +45,9 @@ export function MatchStatistics({ data, status, homeTeamName, awayTeamName, loca
           <colgroup><col className="w-[23%]" /><col className="w-[54%]" /><col className="w-[23%]" /></colgroup>
           <thead className="bg-[var(--muted)] text-xs">
             <tr>
-              <th scope="col" className="break-words px-2 py-4 text-center font-semibold sm:px-4"><span className="mb-1 block text-[var(--muted-foreground)]">{t("home")}</span>{homeTeamName ?? "—"}</th>
-              <th scope="col" className="px-2 py-4 text-center font-medium text-[var(--muted-foreground)]">{t("statistic")}</th>
-              <th scope="col" className="break-words px-2 py-4 text-center font-semibold sm:px-4"><span className="mb-1 block text-[var(--muted-foreground)]">{t("away")}</span>{awayTeamName ?? "—"}</th>
+              <th scope="col" className="break-words px-1.5 py-3 sm:px-4 sm:py-4 text-center text-xs sm:text-sm font-semibold"><span className="mb-1 block text-[var(--muted-foreground)] text-[10px] sm:text-xs">{t("home")}</span>{homeTeamName ?? "—"}</th>
+              <th scope="col" className="px-1.5 py-3 sm:px-4 sm:py-4 text-center text-xs sm:text-sm font-medium text-[var(--muted-foreground)]">{t("statistic")}</th>
+              <th scope="col" className="break-words px-1.5 py-3 sm:px-4 sm:py-4 text-center text-xs sm:text-sm font-semibold"><span className="mb-1 block text-[var(--muted-foreground)] text-[10px] sm:text-xs">{t("away")}</span>{awayTeamName ?? "—"}</th>
             </tr>
           </thead>
           <tbody>
@@ -58,14 +58,14 @@ export function MatchStatistics({ data, status, homeTeamName, awayTeamName, loca
               const shares = statisticShares(home, away);
               const format = (value: number | null) => value === null ? "—" : `${number.format(value)}${row.percent ? "%" : ""}`;
               return <tr key={row.key} className="border-t border-[var(--border)]">
-                <td className="px-2 py-4 text-center text-base font-bold tabular-nums sm:px-4" aria-label={home === null ? t("unavailable") : undefined}>{format(home)}</td>
-                <th scope="row" className="px-2 py-4 text-center text-sm font-medium sm:px-4">
+                <td className="px-1.5 py-3 sm:px-4 sm:py-4 text-center text-sm sm:text-base font-bold tabular-nums" aria-label={home === null ? t("unavailable") : undefined}>{format(home)}</td>
+                <th scope="row" className="px-1.5 py-3 sm:px-4 sm:py-4 text-center text-xs sm:text-sm font-medium">
                   {t(row.key)}
                   <span aria-hidden="true" className="mt-2 flex h-1.5 w-full overflow-hidden rounded-full bg-[var(--muted)]">
                     {shares ? <><span className="h-full bg-[var(--azul-500)]" style={{ width: `${shares[0]}%` }} /><span className="h-full bg-[var(--oro-500)]" style={{ width: `${shares[1]}%` }} /></> : null}
                   </span>
                 </th>
-                <td className="px-2 py-4 text-center text-base font-bold tabular-nums sm:px-4" aria-label={away === null ? t("unavailable") : undefined}>{format(away)}</td>
+                <td className="px-1.5 py-3 sm:px-4 sm:py-4 text-center text-sm sm:text-base font-bold tabular-nums" aria-label={away === null ? t("unavailable") : undefined}>{format(away)}</td>
               </tr>;
             })}
           </tbody>

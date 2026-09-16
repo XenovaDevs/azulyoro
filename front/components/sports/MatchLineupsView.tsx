@@ -219,7 +219,7 @@ export function MatchLineupsView({
       {/* Main pitch & bench layout */}
       <div className="grid min-w-0 gap-6 lg:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)]">
         {/* Tactical Pitch (View from above) */}
-        <div className="relative flex flex-col overflow-hidden rounded-2xl border-2 border-emerald-800/80 bg-gradient-to-b from-emerald-700 via-emerald-800 to-emerald-900 p-4 sm:p-6 shadow-2xl text-white">
+        <div className="relative flex flex-col overflow-hidden rounded-2xl border-2 border-emerald-800/80 bg-gradient-to-b from-emerald-700 via-emerald-800 to-emerald-900 p-2.5 sm:p-6 shadow-2xl text-white">
           {/* Pitch Field Markings (SVG overlay) */}
           <div className="pointer-events-none absolute inset-0 opacity-40">
             <div className="absolute inset-3 border-2 border-white/60 rounded-sm" />
@@ -245,15 +245,15 @@ export function MatchLineupsView({
 
           {/* Score display inside the tactical pitch map (User requirement) */}
           {hasScore && (
-            <div className="relative z-10 mb-4 flex items-center justify-center">
-              <div className="flex items-center gap-2.5 sm:gap-3 rounded-full border border-emerald-400/40 bg-black/80 px-3.5 sm:px-5 py-1 sm:py-1.5 shadow-2xl backdrop-blur-md">
-                <span className="font-display text-xs font-bold uppercase tracking-wider text-emerald-100 truncate max-w-[100px] sm:max-w-[150px]">
+            <div className="relative z-10 mb-3 sm:mb-4 flex items-center justify-center">
+              <div className="flex items-center gap-1.5 sm:gap-3 rounded-full border border-emerald-400/40 bg-black/80 px-2.5 sm:px-5 py-1 sm:py-1.5 shadow-2xl backdrop-blur-md">
+                <span className="font-display text-[11px] sm:text-xs font-bold uppercase tracking-wider text-emerald-100 truncate max-w-[80px] sm:max-w-[150px]">
                   {homeTeamName ?? "Local"}
                 </span>
-                <span className="rounded bg-amber-400/20 px-2 sm:px-2.5 py-0.5 font-mono text-xs sm:text-sm font-extrabold text-amber-300">
+                <span className="rounded bg-amber-400/20 px-1.5 sm:px-2.5 py-0.5 font-mono text-xs sm:text-sm font-extrabold text-amber-300">
                   {homeGoals ?? "—"} : {awayGoals ?? "—"}
                 </span>
-                <span className="font-display text-xs font-bold uppercase tracking-wider text-emerald-100 truncate max-w-[100px] sm:max-w-[150px]">
+                <span className="font-display text-[11px] sm:text-xs font-bold uppercase tracking-wider text-emerald-100 truncate max-w-[80px] sm:max-w-[150px]">
                   {awayTeamName ?? "Visita"}
                 </span>
               </div>
@@ -276,7 +276,7 @@ export function MatchLineupsView({
                       className="group flex w-full min-w-0 flex-col items-center gap-1.5"
                     >
                       {/* Tactical Player Circle with Photo & Badges */}
-                      <div className="relative flex aspect-square w-11 max-w-full sm:w-14 items-center justify-center rounded-full shadow-xl transition-shadow group-hover:shadow-amber-400/50">
+                      <div className="relative flex aspect-square w-9 sm:w-14 max-w-full items-center justify-center rounded-full shadow-xl transition-shadow group-hover:shadow-amber-400/50">
                         {player.photoUrl ? (
                           <div className={`relative h-full w-full rounded-full overflow-hidden border-2 shadow-inner bg-slate-900 ${
                             isBoca ? "border-amber-400" : "border-slate-300"
@@ -291,7 +291,7 @@ export function MatchLineupsView({
                           </div>
                         ) : (
                           <div
-                            className={`flex h-full w-full items-center justify-center rounded-full border-2 font-bold tabular-nums text-sm sm:text-base ${
+                            className={`flex h-full w-full items-center justify-center rounded-full border-2 font-bold tabular-nums text-xs sm:text-base ${
                               isBoca
                                 ? "border-amber-400 bg-gradient-to-tr from-blue-900 via-blue-800 to-blue-950 text-amber-300 shadow-inner"
                                 : "border-slate-300 bg-gradient-to-tr from-slate-800 to-slate-900 text-white shadow-inner"
@@ -303,7 +303,7 @@ export function MatchLineupsView({
 
                         {/* Dorsal Number Badge (Bottom pill) */}
                         {player.number != null && (
-                          <span className={`absolute -bottom-1 left-1/2 -translate-x-1/2 rounded-full px-1.5 py-0.2 text-[9px] sm:text-[10px] font-extrabold tabular-nums shadow-md ${
+                          <span className={`absolute -bottom-1 left-1/2 -translate-x-1/2 rounded-full px-1 sm:px-1.5 py-0.2 text-[8px] sm:text-[10px] font-extrabold tabular-nums shadow-md ${
                             isBoca ? "bg-amber-400 text-blue-950" : "bg-white text-slate-900"
                           }`}>
                             {player.number}
@@ -313,7 +313,7 @@ export function MatchLineupsView({
                         {/* Substitution indicators (Small icons on top - User requirement) */}
                         {badges.subbedOut && (
                           <span
-                            className="absolute -top-1.5 -left-1.5 z-30 flex h-4 w-4 items-center justify-center rounded-full bg-rose-600 text-[10px] font-extrabold text-white shadow-md ring-1 ring-white/70"
+                            className="absolute -top-1.5 -left-1.5 z-30 flex h-3.5 w-3.5 sm:h-4 sm:w-4 items-center justify-center rounded-full bg-rose-600 text-[8px] sm:text-[10px] font-extrabold text-white shadow-md ring-1 ring-white/70"
                             title={isEs ? "Salió del campo (Sustituido)" : "Subbed out"}
                           >
                             ⬇
@@ -321,7 +321,7 @@ export function MatchLineupsView({
                         )}
                         {badges.subbedIn && (
                           <span
-                            className="absolute -top-1.5 -right-1.5 z-30 flex h-4 w-4 items-center justify-center rounded-full bg-emerald-500 text-[10px] font-extrabold text-white shadow-md ring-1 ring-white/70"
+                            className="absolute -top-1.5 -right-1.5 z-30 flex h-3.5 w-3.5 sm:h-4 sm:w-4 items-center justify-center rounded-full bg-emerald-500 text-[8px] sm:text-[10px] font-extrabold text-white shadow-md ring-1 ring-white/70"
                             title={isEs ? "Ingresó al campo (Entró)" : "Subbed in"}
                           >
                             ⬆
@@ -329,10 +329,10 @@ export function MatchLineupsView({
                         )}
 
                         {/* Goals & Cards badges floating at top edge */}
-                        <div className="absolute -top-1 right-2 flex items-center gap-0.5 z-20">
+                        <div className="absolute -top-1 right-1 sm:right-2 flex items-center gap-0.5 z-20">
                           {badges.goals > 0 && (
                             <span
-                              className="flex h-4 w-4 items-center justify-center rounded-full bg-emerald-500 text-[9px] text-white shadow-md font-bold"
+                              className="flex h-3.5 w-3.5 sm:h-4 sm:w-4 items-center justify-center rounded-full bg-emerald-500 text-[8px] sm:text-[9px] text-white shadow-md font-bold"
                               title={`${badges.goals} ${isEs ? "gol(es)" : "goal(s)"}`}
                             >
                               ⚽{badges.goals > 1 ? badges.goals : ""}
@@ -340,13 +340,13 @@ export function MatchLineupsView({
                           )}
                           {badges.yellowCards > 0 && (
                             <span
-                              className="h-3.5 w-2 rounded-xs bg-amber-400 shadow-md inline-block border border-black/20"
+                              className="h-3 w-1.5 sm:h-3.5 sm:w-2 rounded-xs bg-amber-400 shadow-md inline-block border border-black/20"
                               title={isEs ? "Tarjeta amarilla" : "Yellow card"}
                             />
                           )}
                           {badges.redCards > 0 && (
                             <span
-                              className="h-3.5 w-2 rounded-xs bg-rose-600 shadow-md inline-block border border-black/20"
+                              className="h-3 w-1.5 sm:h-3.5 sm:w-2 rounded-xs bg-rose-600 shadow-md inline-block border border-black/20"
                               title={isEs ? "Tarjeta roja" : "Red card"}
                             />
                           )}
@@ -354,7 +354,7 @@ export function MatchLineupsView({
                       </div>
 
                       {/* Player Name Pill */}
-                      <span title={player.playerName ?? undefined} className="w-full min-w-0 max-w-[105px] break-words rounded-md bg-black/85 px-1 py-0.5 text-center text-[10px] sm:text-xs font-semibold text-white backdrop-blur-xs border border-white/20 shadow-md">
+                      <span title={player.playerName ?? undefined} className="w-full min-w-0 max-w-[90px] sm:max-w-[105px] break-words line-clamp-2 rounded-md bg-black/85 px-0.5 sm:px-1 py-0.5 text-center text-[8px] sm:text-xs font-semibold text-white backdrop-blur-xs border border-white/20 shadow-md">
                         {player.playerName ?? "—"}
                       </span>
                     </div>
@@ -371,9 +371,9 @@ export function MatchLineupsView({
 
         {/* Bench / Substitutes Column */}
         <div className="flex flex-col gap-4">
-          <div className="rounded-xl border border-[var(--border)] bg-[var(--card)] p-4 shadow-sm">
+          <div className="rounded-xl border border-[var(--border)] bg-[var(--card)] p-3.5 sm:p-4 shadow-sm">
             {/* Header with Score arriba en suplentes (User requirement) */}
-            <div className="mb-3 flex items-center justify-between border-b border-[var(--border)] pb-2.5">
+            <div className="mb-3 flex flex-wrap items-center justify-between gap-2 border-b border-[var(--border)] pb-2.5">
               <div>
                 <h3 className="font-display text-sm font-semibold uppercase tracking-wider text-[var(--accent)]">
                   {isEs ? "Suplentes" : "Substitutes"}
@@ -385,7 +385,7 @@ export function MatchLineupsView({
 
               {/* Score indicator on top of substitutes */}
               {hasScore && (
-                <div className="flex items-center gap-1.5 rounded-md bg-[var(--muted)] px-2.5 py-1 text-xs font-bold tabular-nums text-[var(--foreground)] border border-[var(--border)] shadow-xs">
+                <div className="flex items-center gap-1.5 rounded-md bg-[var(--muted)] px-2 sm:px-2.5 py-1 text-xs font-bold tabular-nums text-[var(--foreground)] border border-[var(--border)] shadow-xs">
                   <span>{(homeTeamName ?? "LOC").slice(0, 3).toUpperCase()}</span>
                   <span className="text-[var(--oro-500)]">{homeGoals ?? 0} - {awayGoals ?? 0}</span>
                   <span>{(awayTeamName ?? "VIS").slice(0, 3).toUpperCase()}</span>
