@@ -11,6 +11,7 @@ const NAV = [
   { href: "/noticias", key: "news" },
   { href: "/fichajes", key: "transfers" },
   { href: "/bombonera", key: "stadium" },
+  { href: "/foro", key: "forum" },
 ] as const;
 
 export function Header() {

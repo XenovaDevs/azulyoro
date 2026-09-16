@@ -5,6 +5,7 @@ using Azulyoro.Api.Features.Admin;
 using Azulyoro.Api.Features.Articles;
 using Azulyoro.Api.Features.Auth;
 using Azulyoro.Api.Features.Competitions;
+using Azulyoro.Api.Features.Forum;
 using Azulyoro.Api.Features.Legal;
 using Azulyoro.Api.Features.Matches;
 using Azulyoro.Api.Features.Members;
@@ -79,6 +80,7 @@ using (var seedScope = app.Services.CreateScope())
     await IdentitySetup.SeedRolesAsync(seedScope.ServiceProvider);
     await LegalSeeder.SeedLegalAsync(db, CancellationToken.None);
     await ContentSeeder.SeedSourcesAsync(db, CancellationToken.None);
+    await ForumSeeder.SeedForumCategoriesAsync(db, CancellationToken.None);
 
     if (app.Environment.IsDevelopment())
     {
@@ -101,6 +103,7 @@ app.MapAuthEndpoints();
 app.MapNewsletterEndpoints();
 app.MapLegalEndpoints();
 app.MapMembersEndpoints();
+app.MapForumEndpoints();
 
 app.UseAppHangfire();
 

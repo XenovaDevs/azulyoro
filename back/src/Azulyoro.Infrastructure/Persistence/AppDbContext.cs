@@ -40,6 +40,10 @@ public class AppDbContext(DbContextOptions<AppDbContext> options)
     public DbSet<NewsletterSubscriber> NewsletterSubscribers => Set<NewsletterSubscriber>();
     public DbSet<LegalPage> LegalPages => Set<LegalPage>();
 
+    public DbSet<ForumCategory> ForumCategories => Set<ForumCategory>();
+    public DbSet<ForumTopic> ForumTopics => Set<ForumTopic>();
+    public DbSet<ForumPost> ForumPosts => Set<ForumPost>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         // Identity model must be configured first.

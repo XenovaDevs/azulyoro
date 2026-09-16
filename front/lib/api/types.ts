@@ -189,6 +189,7 @@ export interface ArticleDto {
   metaTitle: string | null;
   metaDescription: string | null;
   coverImageUrl: string | null;
+
   sourceName: string | null;
   sourceUrl: string | null;
   publishedAt: string | null;
@@ -227,4 +228,76 @@ export interface UpdateArticleInput {
   category: ArticleCategory;
   coverImageUrl: string;
   isMembersOnly: boolean;
+}
+
+// ── Forum (Foro) ─────────────────────────────────────────────────────────────
+
+export interface ForumCategoryDto {
+  id: string;
+  name: string;
+  slug: string;
+  description: string | null;
+  icon: string | null;
+  displayOrder: number;
+  topicsCount: number;
+  postsCount: number;
+}
+
+export interface ForumTopicSummaryDto {
+  id: string;
+  categoryId: string;
+  categoryName: string;
+  categorySlug: string;
+  matchId: string | null;
+  authorId: string;
+  authorName: string;
+  title: string;
+  slug: string;
+  isPinned: boolean;
+  isLocked: boolean;
+  viewsCount: number;
+  postsCount: number;
+  createdAt: string;
+  lastActivityAt: string;
+}
+
+export interface ForumPostDto {
+  id: string;
+  topicId: string;
+  authorId: string;
+  authorName: string;
+  content: string;
+  createdAt: string;
+  isDeleted: boolean;
+}
+
+export interface ForumTopicDetailDto {
+  id: string;
+  categoryId: string;
+  categoryName: string;
+  categorySlug: string;
+  matchId: string | null;
+  matchLabel: string | null;
+  authorId: string;
+  authorName: string;
+  title: string;
+  slug: string;
+  content: string;
+  isPinned: boolean;
+  isLocked: boolean;
+  viewsCount: number;
+  postsCount: number;
+  createdAt: string;
+  lastActivityAt: string;
+  posts: ForumPostDto[];
+}
+
+export interface ModeratedUserDto {
+  id: string;
+  email: string;
+  displayName: string | null;
+  isBanned: boolean;
+  suspendedUntil: string | null;
+  banReason: string | null;
+  createdAt: string;
 }

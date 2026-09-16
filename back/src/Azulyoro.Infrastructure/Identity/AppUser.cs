@@ -13,6 +13,11 @@ public class AppUser : IdentityUser<Guid>
     public DateTime CreatedAt { get; set; }
     public DateTime? LastLoginAt { get; set; }
     public bool IsActive { get; set; } = true;
+    public bool IsBanned { get; set; }
+    public DateTime? SuspendedUntil { get; set; }
+    public string? BanReason { get; set; }
+
+    public bool IsSuspended => SuspendedUntil.HasValue && SuspendedUntil.Value > DateTime.UtcNow;
 }
 
 public static class AppRoles

@@ -149,6 +149,20 @@ public static class AuthEndpoints
             return Results.Unauthorized();
         }
 
+        if (user.IsBanned)
+        {
+            return Results.Problem(
+                detail: "Tu cuenta ha sido suspendida permanentemente por incumplir las normas comunitarias.",
+                statusCode: StatusCodes.Status403Forbidden);
+        }
+
+        if (user.IsSuspended)
+        {
+            return Results.Problem(
+                detail: $"Tu cuenta está temporalmente suspendida hasta el {user.SuspendedUntil:dd/MM/yyyy HH:mm} UTC. Motivo: {user.BanReason ?? "Incumplimiento de normas"}",
+                statusCode: StatusCodes.Status403Forbidden);
+        }
+
         var result = await signIn.PasswordSignInAsync(
             user, req.Password, isPersistent: true, lockoutOnFailure: true);
 
@@ -201,10 +215,15 @@ public static class AuthEndpoints
         var roles = await users.GetRolesAsync(user);
         return Results.Ok(new
         {
+            id = user.Id,
             email = user.Email,
             displayName = user.DisplayName,
             locale = user.LocalePref,
             roles,
+            isBanned = user.IsBanned,
+            isSuspended = user.IsSuspended,
+            suspendedUntil = user.SuspendedUntil,
+            banReason = user.BanReason,
         });
     }
 

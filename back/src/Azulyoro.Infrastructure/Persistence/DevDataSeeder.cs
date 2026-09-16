@@ -12,8 +12,16 @@ public static class DevDataSeeder
 {
     public static async Task SeedAsync(AppDbContext db, CancellationToken ct)
     {
-        if (await db.Teams.AnyAsync(ct))
-            return;
+        if (!await db.Teams.AnyAsync(ct))
+        {
+            await SeedBaseAsync(db, ct);
+        }
+
+        await SeedSaoPauloMatchAsync(db, ct);
+    }
+
+    private static async Task SeedBaseAsync(AppDbContext db, CancellationToken ct)
+    {
 
         var season = new Season { Year = 2026, IsCurrent = true };
 
@@ -338,6 +346,250 @@ public static class DevDataSeeder
         db.Standings.AddRange(tablaAnualStandings);
         db.Standings.AddRange(promediosStandings);
         db.PlayerSeasonStats.Add(playerSeasonStat);
+
+        await db.SaveChangesAsync(ct);
+    }
+
+    public static async Task SeedSaoPauloMatchAsync(AppDbContext db, CancellationToken ct)
+    {
+        if (await db.Fixtures.AnyAsync(f => f.ExtId == 900003, ct))
+            return;
+
+        var boca = await db.Teams.FirstOrDefaultAsync(t => t.ExtId == 451, ct);
+        var sudamericana = await db.Competitions.FirstOrDefaultAsync(c => c.ExtId == 11, ct);
+        var season = await db.Seasons.FirstOrDefaultAsync(s => s.Year == 2026, ct);
+
+        if (boca is null || sudamericana is null || season is null)
+            return;
+
+        var saoPaulo = await db.Teams.FirstOrDefaultAsync(t => t.ExtId == 126, ct);
+        if (saoPaulo is null)
+        {
+            saoPaulo = new Team
+            {
+                ExtId = 126,
+                Name = "Sao Paulo",
+                ShortName = "Sao Paulo",
+                LogoUrl = "https://media.api-sports.io/football/teams/126.png",
+                Founded = 1930,
+                VenueName = "Estadio Morumbí",
+                VenueCity = "São Paulo",
+                IsTracked = false,
+            };
+            db.Teams.Add(saoPaulo);
+            await db.SaveChangesAsync(ct);
+        }
+
+        var cavani = await db.Players.FirstOrDefaultAsync(p => p.ExtId == 1003, ct);
+        var rojo = await db.Players.FirstOrDefaultAsync(p => p.ExtId == 1002, ct);
+        var romero = await db.Players.FirstOrDefaultAsync(p => p.ExtId == 1001, ct);
+
+        var polFernandez = new Player
+        {
+            ExtId = 1004, TeamId = boca.Id, Team = boca,
+            Name = "Pol Fernández", Firstname = "Guillermo", Lastname = "Fernández",
+            Position = PlayerPosition.Midfielder, Number = 8,
+            Nationality = "Argentina", BirthDate = new DateOnly(1991, 10, 11),
+            Height = 179, Weight = 75, IsActive = true,
+            PhotoUrl = "https://media.api-sports.io/football/players/1004.png",
+        };
+
+        var medina = new Player
+        {
+            ExtId = 1005, TeamId = boca.Id, Team = boca,
+            Name = "Cristian Medina", Firstname = "Cristian", Lastname = "Medina",
+            Position = PlayerPosition.Midfielder, Number = 36,
+            Nationality = "Argentina", BirthDate = new DateOnly(2002, 6, 1),
+            Height = 178, Weight = 72, IsActive = true,
+            PhotoUrl = "https://media.api-sports.io/football/players/1005.png",
+        };
+
+        var merentiel = new Player
+        {
+            ExtId = 1006, TeamId = boca.Id, Team = boca,
+            Name = "Miguel Merentiel", Firstname = "Miguel", Lastname = "Merentiel",
+            Position = PlayerPosition.Attacker, Number = 16,
+            Nationality = "Uruguay", BirthDate = new DateOnly(1996, 2, 24),
+            Height = 176, Weight = 76, IsActive = true,
+            PhotoUrl = "https://media.api-sports.io/football/players/1006.png",
+        };
+
+        var advincula = new Player
+        {
+            ExtId = 1007, TeamId = boca.Id, Team = boca,
+            Name = "Luis Advíncula", Firstname = "Luis", Lastname = "Advíncula",
+            Position = PlayerPosition.Defender, Number = 17,
+            Nationality = "Peru", BirthDate = new DateOnly(1990, 3, 2),
+            Height = 180, Weight = 78, IsActive = true,
+            PhotoUrl = "https://media.api-sports.io/football/players/1007.png",
+        };
+
+        var lucasMoura = new Player
+        {
+            ExtId = 2001, TeamId = saoPaulo.Id, Team = saoPaulo,
+            Name = "Lucas Moura", Firstname = "Lucas", Lastname = "Rodrigues",
+            Position = PlayerPosition.Attacker, Number = 7,
+            Nationality = "Brazil", BirthDate = new DateOnly(1992, 8, 13),
+            Height = 172, Weight = 70, IsActive = true,
+            PhotoUrl = "https://media.api-sports.io/football/players/2001.png",
+        };
+
+        var calleri = new Player
+        {
+            ExtId = 2002, TeamId = saoPaulo.Id, Team = saoPaulo,
+            Name = "Jonathan Calleri", Firstname = "Jonathan", Lastname = "Calleri",
+            Position = PlayerPosition.Attacker, Number = 9,
+            Nationality = "Argentina", BirthDate = new DateOnly(1993, 9, 23),
+            Height = 182, Weight = 79, IsActive = true,
+            PhotoUrl = "https://media.api-sports.io/football/players/2002.png",
+        };
+
+        var rafinha = new Player
+        {
+            ExtId = 2003, TeamId = saoPaulo.Id, Team = saoPaulo,
+            Name = "Rafinha", Firstname = "Marcio", Lastname = "Rafael",
+            Position = PlayerPosition.Defender, Number = 13,
+            Nationality = "Brazil", BirthDate = new DateOnly(1985, 9, 7),
+            Height = 172, Weight = 68, IsActive = true,
+            PhotoUrl = "https://media.api-sports.io/football/players/2003.png",
+        };
+
+        var rafaelGk = new Player
+        {
+            ExtId = 2004, TeamId = saoPaulo.Id, Team = saoPaulo,
+            Name = "Rafael", Firstname = "Rafael", Lastname = "Pires",
+            Position = PlayerPosition.Goalkeeper, Number = 23,
+            Nationality = "Brazil", BirthDate = new DateOnly(1989, 6, 23),
+            Height = 187, Weight = 84, IsActive = true,
+            PhotoUrl = "https://media.api-sports.io/football/players/2004.png",
+        };
+
+        db.Players.AddRange(polFernandez, medina, merentiel, advincula, lucasMoura, calleri, rafinha, rafaelGk);
+
+        var saoPauloVsBoca = new Fixture
+        {
+            ExtId = 900003,
+            Competition = sudamericana,
+            CompetitionId = sudamericana.Id,
+            Season = season,
+            SeasonId = season.Id,
+            Round = "Octavos de Final",
+            DateUtc = new DateTime(2026, 9, 16, 21, 0, 0, DateTimeKind.Utc),
+            Status = FixtureStatus.Finished,
+            Elapsed = 90,
+            VenueName = "Estadio Morumbí",
+            HomeTeam = saoPaulo,
+            HomeTeamId = saoPaulo.Id,
+            AwayTeam = boca,
+            AwayTeamId = boca.Id,
+            HomeGoals = 1,
+            AwayGoals = 2,
+            HtHome = 0,
+            HtAway = 1,
+            FtHome = 1,
+            FtAway = 2,
+            IsBoca = true,
+        };
+        db.Fixtures.Add(saoPauloVsBoca);
+
+        var events = new[]
+        {
+            new FixtureEvent
+            {
+                Fixture = saoPauloVsBoca, FixtureId = saoPauloVsBoca.Id,
+                ExtSeq = 1, Minute = 28,
+                TeamId = boca.Id, PlayerId = cavani?.Id, PlayerName = "Edinson Cavani",
+                Type = EventType.Goal, Detail = "Normal Goal",
+            },
+            new FixtureEvent
+            {
+                Fixture = saoPauloVsBoca, FixtureId = saoPauloVsBoca.Id,
+                ExtSeq = 2, Minute = 39,
+                TeamId = boca.Id, PlayerId = rojo?.Id, PlayerName = "Marcos Rojo",
+                Type = EventType.Card, Detail = "Yellow Card",
+            },
+            new FixtureEvent
+            {
+                Fixture = saoPauloVsBoca, FixtureId = saoPauloVsBoca.Id,
+                ExtSeq = 3, Minute = 54,
+                TeamId = saoPaulo.Id, PlayerId = lucasMoura.Id, PlayerName = "Lucas Moura",
+                Type = EventType.Goal, Detail = "Normal Goal",
+            },
+            new FixtureEvent
+            {
+                Fixture = saoPauloVsBoca, FixtureId = saoPauloVsBoca.Id,
+                ExtSeq = 4, Minute = 65,
+                TeamId = boca.Id,
+                PlayerId = medina.Id, PlayerName = "Cristian Medina",
+                AssistPlayerId = polFernandez.Id, AssistName = "Pol Fernández",
+                Type = EventType.Substitution, Detail = "Substitution",
+            },
+            new FixtureEvent
+            {
+                Fixture = saoPauloVsBoca, FixtureId = saoPauloVsBoca.Id,
+                ExtSeq = 5, Minute = 72,
+                TeamId = boca.Id,
+                PlayerId = merentiel.Id, PlayerName = "Miguel Merentiel",
+                AssistPlayerId = cavani?.Id, AssistName = "Edinson Cavani",
+                Type = EventType.Substitution, Detail = "Substitution",
+            },
+            new FixtureEvent
+            {
+                Fixture = saoPauloVsBoca, FixtureId = saoPauloVsBoca.Id,
+                ExtSeq = 6, Minute = 84,
+                TeamId = boca.Id, PlayerId = merentiel.Id, PlayerName = "Miguel Merentiel",
+                Type = EventType.Goal, Detail = "Normal Goal",
+            },
+        };
+        db.FixtureEvents.AddRange(events);
+
+        var lineupBoca = new FixtureLineup
+        {
+            Fixture = saoPauloVsBoca,
+            FixtureId = saoPauloVsBoca.Id,
+            Team = boca,
+            TeamId = boca.Id,
+            Formation = "4-4-2",
+            CoachName = "Diego Martínez",
+        };
+        if (romero != null) lineupBoca.Players.Add(new FixtureLineupPlayer { Lineup = lineupBoca, PlayerId = romero.Id, IsStarter = true, Number = 1, Grid = "1:1" });
+        lineupBoca.Players.Add(new FixtureLineupPlayer { Lineup = lineupBoca, PlayerId = advincula.Id, IsStarter = true, Number = 17, Grid = "2:1" });
+        if (rojo != null) lineupBoca.Players.Add(new FixtureLineupPlayer { Lineup = lineupBoca, PlayerId = rojo.Id, IsStarter = true, Number = 6, Grid = "2:2" });
+        lineupBoca.Players.Add(new FixtureLineupPlayer { Lineup = lineupBoca, PlayerId = polFernandez.Id, IsStarter = true, Number = 8, Grid = "3:2" });
+        if (cavani != null) lineupBoca.Players.Add(new FixtureLineupPlayer { Lineup = lineupBoca, PlayerId = cavani.Id, IsStarter = true, Number = 10, Grid = "4:2" });
+        lineupBoca.Players.Add(new FixtureLineupPlayer { Lineup = lineupBoca, PlayerId = medina.Id, IsStarter = false, Number = 36 });
+        lineupBoca.Players.Add(new FixtureLineupPlayer { Lineup = lineupBoca, PlayerId = merentiel.Id, IsStarter = false, Number = 16 });
+
+        var lineupSp = new FixtureLineup
+        {
+            Fixture = saoPauloVsBoca,
+            FixtureId = saoPauloVsBoca.Id,
+            Team = saoPaulo,
+            TeamId = saoPaulo.Id,
+            Formation = "4-2-3-1",
+            CoachName = "Luis Zubeldía",
+        };
+        lineupSp.Players.Add(new FixtureLineupPlayer { Lineup = lineupSp, PlayerId = rafaelGk.Id, IsStarter = true, Number = 23, Grid = "1:1" });
+        lineupSp.Players.Add(new FixtureLineupPlayer { Lineup = lineupSp, PlayerId = rafinha.Id, IsStarter = true, Number = 13, Grid = "2:1" });
+        lineupSp.Players.Add(new FixtureLineupPlayer { Lineup = lineupSp, PlayerId = lucasMoura.Id, IsStarter = true, Number = 7, Grid = "3:2" });
+        lineupSp.Players.Add(new FixtureLineupPlayer { Lineup = lineupSp, PlayerId = calleri.Id, IsStarter = true, Number = 9, Grid = "4:2" });
+
+        db.FixtureLineups.AddRange(lineupBoca, lineupSp);
+
+        var stats = new[]
+        {
+            new FixtureTeamStatistic { FixtureId = saoPauloVsBoca.Id, TeamId = saoPaulo.Id, Key = "Ball Possession", Value = 54 },
+            new FixtureTeamStatistic { FixtureId = saoPauloVsBoca.Id, TeamId = boca.Id, Key = "Ball Possession", Value = 46 },
+            new FixtureTeamStatistic { FixtureId = saoPauloVsBoca.Id, TeamId = saoPaulo.Id, Key = "Total Shots", Value = 12 },
+            new FixtureTeamStatistic { FixtureId = saoPauloVsBoca.Id, TeamId = boca.Id, Key = "Total Shots", Value = 11 },
+            new FixtureTeamStatistic { FixtureId = saoPauloVsBoca.Id, TeamId = saoPaulo.Id, Key = "Shots on Goal", Value = 4 },
+            new FixtureTeamStatistic { FixtureId = saoPauloVsBoca.Id, TeamId = boca.Id, Key = "Shots on Goal", Value = 6 },
+            new FixtureTeamStatistic { FixtureId = saoPauloVsBoca.Id, TeamId = saoPaulo.Id, Key = "Corner Kicks", Value = 5 },
+            new FixtureTeamStatistic { FixtureId = saoPauloVsBoca.Id, TeamId = boca.Id, Key = "Corner Kicks", Value = 3 },
+            new FixtureTeamStatistic { FixtureId = saoPauloVsBoca.Id, TeamId = saoPaulo.Id, Key = "Fouls", Value = 14 },
+            new FixtureTeamStatistic { FixtureId = saoPauloVsBoca.Id, TeamId = boca.Id, Key = "Fouls", Value = 16 },
+        };
+        db.FixtureTeamStatistics.AddRange(stats);
 
         await db.SaveChangesAsync(ct);
     }

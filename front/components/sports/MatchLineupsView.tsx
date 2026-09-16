@@ -9,6 +9,11 @@ interface MatchLineupsViewProps {
   locale?: string;
   homeTeamId?: string;
   awayTeamId?: string;
+  homeTeamName?: string | null;
+  awayTeamName?: string | null;
+  homeGoals?: number | null;
+  awayGoals?: number | null;
+  status?: string;
 }
 
 interface PlayerEventBadges {
@@ -83,7 +88,6 @@ function groupStartersIntoLines(
   starters: LineupPlayerDto[],
   formation: string | null,
 ): LineupPlayerDto[][] {
-  // Check if grid is present
   const hasGrid = starters.some((p) => Boolean(p.grid));
   if (hasGrid) {
     const rowsMap = new Map<number, LineupPlayerDto[]>();
@@ -104,7 +108,6 @@ function groupStartersIntoLines(
     });
   }
 
-  // Fallback: group by formation rows [1, 4, 3, 3]
   const rows = parseFormationRows(formation);
   const result: LineupPlayerDto[][] = [];
   let currentIndex = 0;
@@ -117,7 +120,6 @@ function groupStartersIntoLines(
     currentIndex += count;
   }
 
-  // Remaining if any
   if (currentIndex < starters.length) {
     result.push(starters.slice(currentIndex));
   }
@@ -129,14 +131,19 @@ export function MatchLineupsView({
   lineups,
   events = [],
   locale = "es",
+  homeTeamName,
+  awayTeamName,
+  homeGoals,
+  awayGoals,
 }: MatchLineupsViewProps) {
   const [selectedTeamIdx, setSelectedTeamIdx] = useState<number>(0);
   const isEs = locale === "es";
 
+  const hasScore = homeGoals != null || awayGoals != null;
+
   if (!lineups || lineups.length === 0) {
     return (
       <div className="relative flex flex-col overflow-hidden rounded-2xl border-2 border-emerald-800/80 bg-gradient-to-b from-emerald-700 via-emerald-800 to-emerald-900 p-8 shadow-2xl text-white">
-        {/* Pitch Field Markings (SVG overlay) */}
         <div className="pointer-events-none absolute inset-0 opacity-40">
           <div className="absolute inset-3 border-2 border-white/60 rounded-sm" />
           <div className="absolute top-1/2 left-3 right-3 h-0.5 bg-white/60 -translate-y-1/2" />
@@ -215,21 +222,14 @@ export function MatchLineupsView({
         <div className="relative flex flex-col overflow-hidden rounded-2xl border-2 border-emerald-800/80 bg-gradient-to-b from-emerald-700 via-emerald-800 to-emerald-900 p-4 sm:p-6 shadow-2xl text-white">
           {/* Pitch Field Markings (SVG overlay) */}
           <div className="pointer-events-none absolute inset-0 opacity-40">
-            {/* Field outer line */}
             <div className="absolute inset-3 border-2 border-white/60 rounded-sm" />
-            {/* Center line */}
             <div className="absolute top-1/2 left-3 right-3 h-0.5 bg-white/60 -translate-y-1/2" />
-            {/* Center circle */}
             <div className="absolute top-1/2 left-1/2 h-28 w-28 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-white/60" />
-            {/* Center dot */}
             <div className="absolute top-1/2 left-1/2 h-2 w-2 -translate-x-1/2 -translate-y-1/2 rounded-full bg-white/80" />
-            {/* Top penalty box (Goalie opponent side) */}
             <div className="absolute top-3 left-1/2 h-16 w-36 -translate-x-1/2 border-2 border-t-0 border-white/60" />
             <div className="absolute top-3 left-1/2 h-7 w-20 -translate-x-1/2 border-2 border-t-0 border-white/60" />
-            {/* Bottom penalty box (Our goalie side) */}
             <div className="absolute bottom-3 left-1/2 h-16 w-36 -translate-x-1/2 border-2 border-b-0 border-white/60" />
             <div className="absolute bottom-3 left-1/2 h-7 w-20 -translate-x-1/2 border-2 border-b-0 border-white/60" />
-            {/* Grass stripes */}
             <div className="absolute inset-0 flex flex-col justify-between opacity-15">
               {[...Array(6)].map((_, i) => (
                 <div key={i} className="h-1/6 w-full odd:bg-black even:bg-transparent" />
@@ -237,11 +237,28 @@ export function MatchLineupsView({
             </div>
           </div>
 
-          {/* Header indicator */}
-          <div className="relative z-10 mb-4 flex items-center justify-between text-xs font-semibold text-emerald-200 uppercase tracking-wider">
+          {/* Tactical Pitch Header with Attack Direction & Formation */}
+          <div className="relative z-10 mb-2 flex items-center justify-between text-xs font-semibold text-emerald-200 uppercase tracking-wider">
             <span>{isEs ? "Ataque" : "Attack"} ⬆️</span>
             <span>{activeLineup.formation ?? (isEs ? "Formación" : "Lineup")}</span>
           </div>
+
+          {/* Score display inside the tactical pitch map (User requirement) */}
+          {hasScore && (
+            <div className="relative z-10 mb-4 flex items-center justify-center">
+              <div className="flex items-center gap-2.5 sm:gap-3 rounded-full border border-emerald-400/40 bg-black/80 px-3.5 sm:px-5 py-1 sm:py-1.5 shadow-2xl backdrop-blur-md">
+                <span className="font-display text-xs font-bold uppercase tracking-wider text-emerald-100 truncate max-w-[100px] sm:max-w-[150px]">
+                  {homeTeamName ?? "Local"}
+                </span>
+                <span className="rounded bg-amber-400/20 px-2 sm:px-2.5 py-0.5 font-mono text-xs sm:text-sm font-extrabold text-amber-300">
+                  {homeGoals ?? "—"} : {awayGoals ?? "—"}
+                </span>
+                <span className="font-display text-xs font-bold uppercase tracking-wider text-emerald-100 truncate max-w-[100px] sm:max-w-[150px]">
+                  {awayTeamName ?? "Visita"}
+                </span>
+              </div>
+            </div>
+          )}
 
           {/* Tactical lines from Attackers (top) to Goalkeeper (bottom) */}
           <div className="relative z-10 flex min-h-[460px] flex-col-reverse justify-between py-2 sm:min-h-[520px]">
@@ -293,11 +310,29 @@ export function MatchLineupsView({
                           </span>
                         )}
 
-                        {/* Event badges floating on top-right */}
-                        <div className="absolute -top-1.5 -right-1.5 flex flex-col gap-0.5 z-20">
+                        {/* Substitution indicators (Small icons on top - User requirement) */}
+                        {badges.subbedOut && (
+                          <span
+                            className="absolute -top-1.5 -left-1.5 z-30 flex h-4 w-4 items-center justify-center rounded-full bg-rose-600 text-[10px] font-extrabold text-white shadow-md ring-1 ring-white/70"
+                            title={isEs ? "Salió del campo (Sustituido)" : "Subbed out"}
+                          >
+                            ⬇
+                          </span>
+                        )}
+                        {badges.subbedIn && (
+                          <span
+                            className="absolute -top-1.5 -right-1.5 z-30 flex h-4 w-4 items-center justify-center rounded-full bg-emerald-500 text-[10px] font-extrabold text-white shadow-md ring-1 ring-white/70"
+                            title={isEs ? "Ingresó al campo (Entró)" : "Subbed in"}
+                          >
+                            ⬆
+                          </span>
+                        )}
+
+                        {/* Goals & Cards badges floating at top edge */}
+                        <div className="absolute -top-1 right-2 flex items-center gap-0.5 z-20">
                           {badges.goals > 0 && (
                             <span
-                              className="flex h-4.5 w-4.5 items-center justify-center rounded-full bg-emerald-500 text-[10px] text-white shadow-md font-bold"
+                              className="flex h-4 w-4 items-center justify-center rounded-full bg-emerald-500 text-[9px] text-white shadow-md font-bold"
                               title={`${badges.goals} ${isEs ? "gol(es)" : "goal(s)"}`}
                             >
                               ⚽{badges.goals > 1 ? badges.goals : ""}
@@ -305,31 +340,15 @@ export function MatchLineupsView({
                           )}
                           {badges.yellowCards > 0 && (
                             <span
-                              className="h-4 w-2.5 rounded-xs bg-amber-400 shadow-md inline-block border border-black/20"
+                              className="h-3.5 w-2 rounded-xs bg-amber-400 shadow-md inline-block border border-black/20"
                               title={isEs ? "Tarjeta amarilla" : "Yellow card"}
                             />
                           )}
                           {badges.redCards > 0 && (
                             <span
-                              className="h-4 w-2.5 rounded-xs bg-rose-600 shadow-md inline-block border border-black/20"
+                              className="h-3.5 w-2 rounded-xs bg-rose-600 shadow-md inline-block border border-black/20"
                               title={isEs ? "Tarjeta roja" : "Red card"}
                             />
-                          )}
-                          {badges.subbedOut && (
-                            <span
-                              className="flex h-4 w-4 items-center justify-center rounded-full bg-rose-600 text-[9px] font-bold text-white shadow-md"
-                              title={isEs ? "Salió sustituido" : "Subbed out"}
-                            >
-                              ⬇️
-                            </span>
-                          )}
-                          {badges.subbedIn && (
-                            <span
-                              className="flex h-4 w-4 items-center justify-center rounded-full bg-emerald-600 text-[9px] font-bold text-white shadow-md"
-                              title={isEs ? "Ingresó de cambio" : "Subbed in"}
-                            >
-                              ⬆️
-                            </span>
                           )}
                         </div>
                       </div>
@@ -353,12 +372,26 @@ export function MatchLineupsView({
         {/* Bench / Substitutes Column */}
         <div className="flex flex-col gap-4">
           <div className="rounded-xl border border-[var(--border)] bg-[var(--card)] p-4 shadow-sm">
-            <h3 className="mb-3 flex items-center justify-between border-b border-[var(--border)] pb-2 font-display text-sm font-semibold uppercase tracking-wider text-[var(--accent)]">
-              <span>{isEs ? "Suplentes" : "Substitutes"}</span>
-              <span className="text-xs text-[var(--muted-foreground)] font-normal">
-                {substitutes.length} {isEs ? "jugadores" : "players"}
-              </span>
-            </h3>
+            {/* Header with Score arriba en suplentes (User requirement) */}
+            <div className="mb-3 flex items-center justify-between border-b border-[var(--border)] pb-2.5">
+              <div>
+                <h3 className="font-display text-sm font-semibold uppercase tracking-wider text-[var(--accent)]">
+                  {isEs ? "Suplentes" : "Substitutes"}
+                </h3>
+                <span className="text-xs text-[var(--muted-foreground)] font-normal">
+                  {substitutes.length} {isEs ? "jugadores" : "players"}
+                </span>
+              </div>
+
+              {/* Score indicator on top of substitutes */}
+              {hasScore && (
+                <div className="flex items-center gap-1.5 rounded-md bg-[var(--muted)] px-2.5 py-1 text-xs font-bold tabular-nums text-[var(--foreground)] border border-[var(--border)] shadow-xs">
+                  <span>{(homeTeamName ?? "LOC").slice(0, 3).toUpperCase()}</span>
+                  <span className="text-[var(--oro-500)]">{homeGoals ?? 0} - {awayGoals ?? 0}</span>
+                  <span>{(awayTeamName ?? "VIS").slice(0, 3).toUpperCase()}</span>
+                </div>
+              )}
+            </div>
 
             {substitutes.length > 0 ? (
               <ul className="flex flex-col divide-y divide-[var(--border)]">
@@ -370,9 +403,29 @@ export function MatchLineupsView({
                       className="flex items-center justify-between py-2 text-sm hover:bg-[color-mix(in_oklab,var(--foreground)_3%,var(--card))] px-1 rounded transition-colors"
                     >
                       <div className="flex min-w-0 items-center gap-2.5">
-                        <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[var(--muted)] text-xs font-bold tabular-nums text-[var(--muted-foreground)]">
-                          {sub.number ?? "–"}
-                        </span>
+                        <div className="relative">
+                          <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[var(--muted)] text-xs font-bold tabular-nums text-[var(--muted-foreground)]">
+                            {sub.number ?? "–"}
+                          </span>
+                          {/* Small icon on top for substitution in list */}
+                          {badges.subbedIn && (
+                            <span
+                              className="absolute -top-1 -right-1 flex h-3 w-3 items-center justify-center rounded-full bg-emerald-500 text-[8px] font-bold text-white shadow-xs"
+                              title={isEs ? "Entró" : "In"}
+                            >
+                              ⬆
+                            </span>
+                          )}
+                          {badges.subbedOut && (
+                            <span
+                              className="absolute -top-1 -left-1 flex h-3 w-3 items-center justify-center rounded-full bg-rose-600 text-[8px] font-bold text-white shadow-xs"
+                              title={isEs ? "Salió" : "Out"}
+                            >
+                              ⬇
+                            </span>
+                          )}
+                        </div>
+
                         {sub.photoUrl && (
                           <span className="h-6 w-6 shrink-0 rounded-full overflow-hidden border border-[var(--border)] bg-slate-900 inline-block">
                             {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -391,7 +444,15 @@ export function MatchLineupsView({
                             className="inline-flex items-center gap-0.5 rounded bg-emerald-500/15 px-1.5 py-0.5 text-[10px] font-bold text-emerald-500"
                             title={isEs ? "Ingresó al partido" : "Entered match"}
                           >
-                            ⬆️ {isEs ? "Entró" : "In"}
+                            ⬆ {isEs ? "Entró" : "In"}
+                          </span>
+                        )}
+                        {badges.subbedOut && (
+                          <span
+                            className="inline-flex items-center gap-0.5 rounded bg-rose-500/15 px-1.5 py-0.5 text-[10px] font-bold text-rose-500"
+                            title={isEs ? "Salió sustituido" : "Subbed out"}
+                          >
+                            ⬇ {isEs ? "Salió" : "Out"}
                           </span>
                         )}
                         {badges.goals > 0 && (
@@ -423,20 +484,28 @@ export function MatchLineupsView({
               {isEs ? "Titulares" : "Starting XI"}
             </h3>
             <div className="grid grid-cols-2 gap-x-3 gap-y-2 text-xs text-[var(--foreground)]">
-              {starters.map((p) => (
-                <div key={p.playerId} className="flex items-center gap-2 truncate">
-                  <span className="tabular-nums font-bold text-[var(--oro-500)] text-xs">
-                    {p.number ?? "–"}.
-                  </span>
-                  {p.photoUrl && (
-                    <span className="h-5 w-5 shrink-0 rounded-full overflow-hidden border border-[var(--border)] bg-slate-900 inline-block">
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img src={p.photoUrl} alt="" className="h-full w-full object-cover object-top" loading="lazy" />
+              {starters.map((p) => {
+                const badges = getPlayerBadges(p.playerId, p.playerName, events);
+                return (
+                  <div key={p.playerId} className="flex items-center gap-2 truncate">
+                    <span className="tabular-nums font-bold text-[var(--oro-500)] text-xs">
+                      {p.number ?? "–"}.
                     </span>
-                  )}
-                  <span className="truncate font-medium">{p.playerName ?? "—"}</span>
-                </div>
-              ))}
+                    {p.photoUrl && (
+                      <span className="h-5 w-5 shrink-0 rounded-full overflow-hidden border border-[var(--border)] bg-slate-900 inline-block">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src={p.photoUrl} alt="" className="h-full w-full object-cover object-top" loading="lazy" />
+                      </span>
+                    )}
+                    <span className="truncate font-medium">{p.playerName ?? "—"}</span>
+                    {badges.subbedOut && (
+                      <span className="text-[10px] font-bold text-rose-500 ml-auto shrink-0" title={isEs ? "Salió" : "Out"}>
+                        ⬇
+                      </span>
+                    )}
+                  </div>
+                );
+              })}
             </div>
           </div>
         </div>

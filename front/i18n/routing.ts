@@ -37,6 +37,10 @@ export const routing = defineRouting({
     "/aviso-legal": { es: "/aviso-legal", en: "/legal-notice" },
     "/cookies": { es: "/cookies", en: "/cookies" },
     "/contacto": { es: "/contacto", en: "/contact" },
+    "/foro": { es: "/foro", en: "/forum" },
+    "/foro/categoria/[slug]": { es: "/foro/categoria/[slug]", en: "/forum/category/[slug]" },
+    "/foro/tema/[id]": { es: "/foro/tema/[id]", en: "/forum/topic/[id]" },
+    "/foro/nuevo": { es: "/foro/nuevo", en: "/forum/new" },
   },
 });
 

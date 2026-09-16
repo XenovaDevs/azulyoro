@@ -20,6 +20,7 @@ import { MatchKickoffTime } from "@/components/sports/MatchKickoffTime";
 import { MatchEventsList } from "@/components/sports/MatchEventsList";
 import { MatchLineupsView } from "@/components/sports/MatchLineupsView";
 import { MatchStatistics } from "@/components/sports/MatchStatistics";
+import { MatchDetailTabs } from "@/components/sports/MatchDetailTabs";
 import { sportsCompetitionLabel, sportsRoundLabel } from "@/lib/sports-labels";
 import type { MatchDto } from "@/lib/api/types";
 
@@ -201,69 +202,29 @@ export default async function MatchDetailPage({
         </div>
       </section>
 
-      <MatchStatistics data={teamStats} status={match.status} homeTeamName={match.homeTeamName} awayTeamName={match.awayTeamName} locale={locale} />
-
-      {/* Lineups (Tactical Pitch & Substitutes) */}
-      <section>
-        <h2 className="mb-4 font-display text-xl font-bold">{t("lineups")}</h2>
-        <MatchLineupsView
-          lineups={lineups}
-          events={events}
-          locale={locale}
-          homeTeamId={match.homeTeamId}
-          awayTeamId={match.awayTeamId}
-        />
-      </section>
-
-      {/* Events */}
-      {played && (
-        <section>
-          <h2 className="mb-4 font-display text-xl font-bold">{t("events")}</h2>
-          {events.length > 0 ? (
-            <MatchEventsList
-              events={events}
-              locale={locale}
-              homeTeamId={match.homeTeamId}
-              awayTeamId={match.awayTeamId}
-              homeTeamName={match.homeTeamName}
-              awayTeamName={match.awayTeamName}
-            />
-          ) : (
-            <EmptyState title={t("eventsEmpty")} />
-          )}
-        </section>
-      )}
-
-      {/* Player stats */}
-      {stats.length > 0 && (
-        <section>
-          <h2 className="mb-3 font-display text-lg font-semibold">{t("playerStats")}</h2>
-          <div className="overflow-x-auto rounded-lg border border-[var(--border)]">
-            <table className="w-full text-sm">
-              <thead className="bg-[var(--muted)] text-left text-xs uppercase tracking-wide text-[var(--muted-foreground)]">
-                <tr>
-                  <th className="px-3 py-2">{t("player")}</th>
-                  <th className="px-3 py-2 text-right">{t("minutesShort")}</th>
-                  <th className="px-3 py-2 text-right">{t("goalsShort")}</th>
-                  <th className="px-3 py-2 text-right">{t("assistsShort")}</th>
-                  <th className="px-3 py-2 text-right">{t("ratingShort")}</th>
-                </tr>
-              </thead>
-              <tbody>
-                {stats.map((s, i) => (
-                  <tr key={i} className="border-t border-[var(--border)]">
-                    <td className="px-3 py-2">{s.playerName ?? "—"}</td>
-                    <td className="px-3 py-2 text-right tabular-nums">{s.minutes ?? 0}</td>
-                    <td className="px-3 py-2 text-right tabular-nums">{s.goals}</td>
-                    <td className="px-3 py-2 text-right tabular-nums">{s.assists}</td>
-                    <td className="px-3 py-2 text-right tabular-nums">{s.rating ?? "—"}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </section>
-      )}
+      {/* Interactive Tabs: Estadísticas (default), Alineaciones, Cronología, Foro */}
+      <MatchDetailTabs
+        match={match}
+        detail={detail}
+        events={events}
+        lineups={lineups}
+        stats={stats}
+        teamStats={teamStats}
+        locale={locale}
+        labels={{
+          stats: locale === "es" ? "Estadísticas" : "Statistics",
+          lineups: t("lineups"),
+          events: t("events"),
+          forum: locale === "es" ? "Foro y Debate" : "Match Forum",
+          eventsEmpty: t("eventsEmpty"),
+          playerStats: t("playerStats"),
+          player: t("player"),
+          minutesShort: t("minutesShort"),
+          goalsShort: t("goalsShort"),
+          assistsShort: t("assistsShort"),
+          ratingShort: t("ratingShort"),
+        }}
+      />
         </>
       )}
     </main>

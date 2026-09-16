@@ -191,6 +191,11 @@ export function LiveMatchStream({
           locale={locale}
           homeTeamId={match.homeTeamId}
           awayTeamId={match.awayTeamId}
+          homeTeamName={match.homeTeamName}
+          awayTeamName={match.awayTeamName}
+          homeGoals={update.homeGoals}
+          awayGoals={update.awayGoals}
+          status={update.status}
         />
       </section>
 
