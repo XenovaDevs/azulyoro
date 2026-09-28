@@ -43,7 +43,7 @@ Pendiente comprobado tras desplegar: el overview 2026 aún devuelve sólo los fi
 - [x] Integrar logo oficial en cabecera/pie, favicon y variantes claro/oscuro; conservar proporciones y tipografía del original.
 - [x] Aplicar azul #275585 y oro #ffcf42, incorporar fotografía de tribuna en portada y actualizar documentación de marca.
 - [x] Verificar lint, build, pruebas existentes y navegador en móvil/escritorio, claro/oscuro y es/en.
-- [ ] Revisar diff, hacer commit y push a main; comprobar publicación.
+- [x] Revisar diff, hacer commit y push a main; comprobar publicación en origin/main.
 
 ### Criterios y plan verificado
 
@@ -51,4 +51,4 @@ Usar los archivos entregados como fuente de verdad. Los SVG dependen de fuentes 
 
 ### Revisión
 
-Build de producción y TypeScript aprobados (146 páginas) usando la API pública en lectura, ya que la API local está apagada. Las 33 pruebas existentes pasan. Lint de los archivos modificados sin errores; lint global conserva cinco errores any y seis warnings preexistentes en foro/detalle de partido, comprobados contra HEAD. Revisión independiente sin bloqueantes: logos derivados idénticos píxel a píxel al PNG recortado, foto optimizada a 312 KB. Playwright: 16 combinaciones del HTML prerenderizado real (es/en, claro/oscuro, 375/768/1024/1440), sin overflow y con las dos marcas visibles cargadas; portada revisada en preview estático de sus componentes a 375/1440. El entorno rechazó iniciar el servidor local por política, por lo que esta revisión de navegador es estática; no se afirma una prueba local de hidratación. Evidencias locales en output/playwright/. Pendiente: commit/push y comprobación publicada.
+Build de producción y TypeScript aprobados (146 páginas) usando la API pública en lectura, ya que la API local está apagada. Las 33 pruebas existentes pasan. Lint de los archivos modificados sin errores; lint global conserva cinco errores any y seis warnings preexistentes en foro/detalle de partido, comprobados contra HEAD. Revisión independiente sin bloqueantes: logos derivados idénticos píxel a píxel al PNG recortado, foto optimizada a 312 KB. Playwright: 16 combinaciones del HTML prerenderizado real (es/en, claro/oscuro, 375/768/1024/1440), sin overflow y con las dos marcas visibles cargadas; portada revisada en preview estático de sus componentes a 375/1440. El entorno rechazó iniciar el servidor local por política, por lo que esta revisión de navegador es estática; no se afirma una prueba local de hidratación. Evidencias locales en output/playwright/. Entrega: commit 5f4be70 publicado en main, SHA remoto confirmado y árbol limpio. Autodeploy 36499058592 iniciado; la comprobación HTTP posterior se informa al finalizar la sesión.
