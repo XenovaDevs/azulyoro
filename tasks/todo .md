@@ -36,3 +36,19 @@ La verificación visual utiliza un backend aislado en memoria con una copia de d
 Producción: commit de código `a367af8` publicado en main. GitHub Actions `33996517881` terminó en success. `/es/posiciones` responde 200 y muestra Clausura con dos zonas de 15 equipos, Boca 11 puntos/8 PJ; la anual muestra 41 puntos/24 PJ. Consola del navegador sin errores. Los selectores muestran Liga, Libertadores, Sudamericana, Copa Argentina y amistosos para 2026.
 
 Pendiente comprobado tras desplegar: el overview 2026 aún devuelve sólo los fixtures antiguos de Boca (Liga 33, Libertadores 6, Sudamericana 6, Copa Argentina 4), cero encuentros de otros equipos y ninguna tabla internacional. No se afirma que la carga completa esté funcionando en producción. El dashboard Hangfire responde 401; falta acceso a logs del VPS para identificar la causa real de la ingestión pendiente. La corrección de posiciones está verificada; la cobertura completa de datos sigue abierta.
+
+## Actualización de identidad de marca — 2026-09-28
+
+- [x] Revisar originales, componentes compartidos, paleta y estado de Git.
+- [x] Integrar logo oficial en cabecera/pie, favicon y variantes claro/oscuro; conservar proporciones y tipografía del original.
+- [x] Aplicar azul #275585 y oro #ffcf42, incorporar fotografía de tribuna en portada y actualizar documentación de marca.
+- [x] Verificar lint, build, pruebas existentes y navegador en móvil/escritorio, claro/oscuro y es/en.
+- [ ] Revisar diff, hacer commit y push a main; comprobar publicación.
+
+### Criterios y plan verificado
+
+Usar los archivos entregados como fuente de verdad. Los SVG dependen de fuentes no incluidas, por lo que se utilizarán las versiones PNG fieles al diseño. Mantener navegación, anchos existentes y aviso de sitio no oficial. Derivar tonos accesibles para texto sin usar el amarillo claro como texto sobre blanco. No modificar datos deportivos ni lógica de negocio.
+
+### Revisión
+
+Build de producción y TypeScript aprobados (146 páginas) usando la API pública en lectura, ya que la API local está apagada. Las 33 pruebas existentes pasan. Lint de los archivos modificados sin errores; lint global conserva cinco errores any y seis warnings preexistentes en foro/detalle de partido, comprobados contra HEAD. Revisión independiente sin bloqueantes: logos derivados idénticos píxel a píxel al PNG recortado, foto optimizada a 312 KB. Playwright: 16 combinaciones del HTML prerenderizado real (es/en, claro/oscuro, 375/768/1024/1440), sin overflow y con las dos marcas visibles cargadas; portada revisada en preview estático de sus componentes a 375/1440. El entorno rechazó iniciar el servidor local por política, por lo que esta revisión de navegador es estática; no se afirma una prueba local de hidratación. Evidencias locales en output/playwright/. Pendiente: commit/push y comprobación publicada.

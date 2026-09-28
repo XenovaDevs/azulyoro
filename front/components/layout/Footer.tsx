@@ -1,6 +1,6 @@
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
-import { Wordmark } from "@/components/ui/Wordmark";
+import { BrandMark } from "@/components/ui/BrandMark";
 import { UnofficialDisclaimer } from "@/components/ui/UnofficialDisclaimer";
 
 const LEGAL = [
@@ -18,7 +18,7 @@ export function Footer() {
       <div className="mx-auto flex max-w-6xl flex-col gap-6 px-4 py-8">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <Link href="/" aria-label="Azul y Oro">
-            <Wordmark />
+            <BrandMark />
           </Link>
           <nav className="flex flex-wrap gap-4 text-sm text-[var(--muted-foreground)]">
             {LEGAL.map((l) => (

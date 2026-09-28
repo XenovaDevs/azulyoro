@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { getNextMatch, getMatches } from "@/lib/api/sports";
@@ -48,34 +49,44 @@ export default async function Home({
         dangerouslySetInnerHTML={{ __html: JSON.stringify(teamJsonLd) }}
       />
       <section className="hero-band rounded-2xl border border-[var(--border)] px-4 py-8 text-center shadow-lg sm:px-10 sm:py-16">
-        <p className="mb-3 text-xs font-semibold uppercase tracking-[0.2em] text-[var(--oro-400)]">
-          {t("heroKicker")}
-        </p>
-        <h1 className="font-display text-3xl font-bold tracking-tight text-white sm:text-6xl">
-          {t("title")}
-        </h1>
-        <p className="mx-auto mt-4 max-w-xl text-lg text-[color-mix(in_oklab,white_82%,transparent)]">
-          {t("tagline")}
-        </p>
-        <div className="mt-7 flex flex-wrap items-center justify-center gap-3">
-          <Link
-            href="/partidos"
-            className="rounded-full bg-[var(--oro-500)] px-5 py-2.5 text-sm font-semibold text-[var(--azul-900)] transition-transform hover:-translate-y-0.5"
-          >
-            {t("viewAllMatches")}
-          </Link>
-          <Link
-            href="/plantel"
-            className="rounded-full border border-white/25 px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-white/10"
-          >
-            {t("heroCtaSquad")}
-          </Link>
-          <Link
-            href="/bombonera"
-            className="rounded-full border border-[var(--oro-500)]/60 px-5 py-2.5 text-sm font-semibold text-[var(--oro-400)] transition-colors hover:bg-[var(--oro-500)]/10"
-          >
-            {t("heroCtaStadium")}
-          </Link>
+        <Image
+          src="/brand/tribuna.webp"
+          alt=""
+          fill
+          preload
+          sizes="(max-width: 1152px) 100vw, 1120px"
+          className="hero-photo object-cover"
+        />
+        <div className="hero-content">
+          <p className="mb-3 text-xs font-semibold uppercase tracking-[0.2em] text-[var(--oro-400)]">
+            {t("heroKicker")}
+          </p>
+          <h1 className="font-display text-3xl font-bold tracking-tight text-white sm:text-6xl">
+            {t("title")}
+          </h1>
+          <p className="mx-auto mt-4 max-w-xl text-lg text-[color-mix(in_oklab,white_82%,transparent)]">
+            {t("tagline")}
+          </p>
+          <div className="mt-7 flex flex-wrap items-center justify-center gap-3">
+            <Link
+              href="/partidos"
+              className="rounded-full bg-[var(--oro-500)] px-5 py-2.5 text-sm font-semibold text-[var(--azul-900)] transition-transform hover:-translate-y-0.5"
+            >
+              {t("viewAllMatches")}
+            </Link>
+            <Link
+              href="/plantel"
+              className="rounded-full border border-white/25 px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-white/10"
+            >
+              {t("heroCtaSquad")}
+            </Link>
+            <Link
+              href="/bombonera"
+              className="rounded-full border border-[var(--oro-500)]/60 px-5 py-2.5 text-sm font-semibold text-[var(--oro-400)] transition-colors hover:bg-[var(--oro-500)]/10"
+            >
+              {t("heroCtaStadium")}
+            </Link>
+          </div>
         </div>
       </section>
 

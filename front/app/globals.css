@@ -42,15 +42,17 @@
   }
 
   :root {
-    /* Brand palette — deep navy blue + warm orange-gold (last-season kit vibe,
-       gold-forward). Hues ~258 (navy) and ~78 (amber-gold). */
-    --azul-900: oklch(0.2 0.1 259);
-    --azul-700: oklch(0.32 0.13 257);
-    --azul-500: oklch(0.46 0.14 255);
-    --oro-700: oklch(0.62 0.14 74);
-    --oro-600: oklch(0.72 0.15 77);
-    --oro-500: oklch(0.82 0.16 80);
-    --oro-400: oklch(0.88 0.13 83);
+    /* Supplied identity: #275585 blue and #ffcf42 gold.
+       Supporting shades keep controls and text legible in both themes. */
+    --azul-900: #102b46;
+    --azul-700: #275585;
+    --azul-500: #86b4e0;
+    --oro-700: #806000;
+    --oro-600: #e6b52d;
+    --oro-500: #ffcf42;
+    --oro-400: #ffdf80;
+    --brand-light-display: block;
+    --brand-dark-display: none;
 
     /* Semantic — light */
     --background: oklch(0.99 0.006 255);
@@ -67,7 +69,7 @@
     --success: oklch(0.65 0.15 150);
     --warning: oklch(0.8 0.15 80);
     --danger: oklch(0.58 0.19 27);
-    --info: var(--azul-500);
+    --info: var(--primary);
     --live: oklch(0.62 0.2 27);
 
     color-scheme: light;
@@ -89,6 +91,8 @@
       --muted: oklch(0.25 0.04 259);
       --muted-foreground: oklch(0.72 0.025 258);
       --border: oklch(0.31 0.045 258);
+      --brand-light-display: none;
+      --brand-dark-display: block;
       color-scheme: dark;
     }
   }
@@ -104,6 +108,8 @@
     --muted: oklch(0.25 0.04 259);
     --muted-foreground: oklch(0.72 0.025 258);
     --border: oklch(0.31 0.045 258);
+    --brand-light-display: none;
+    --brand-dark-display: block;
     color-scheme: dark;
   }
 
@@ -136,6 +142,14 @@
    dark theme without loud backgrounds.
    ------------------------------------------------------------------------- */
 @layer components {
+  .brand-light {
+    display: var(--brand-light-display);
+  }
+
+  .brand-dark {
+    display: var(--brand-dark-display);
+  }
+
   .heading-accent {
     position: relative;
     padding-left: 0.85rem;
@@ -153,18 +167,25 @@
 
   .hero-band {
     position: relative;
+    isolation: isolate;
     overflow: hidden;
-    background-image:
-      radial-gradient(
-        620px 320px at 12% 0%,
-        color-mix(in oklab, var(--oro-500) 20%, transparent),
-        transparent 62%
-      ),
-      linear-gradient(
-        135deg,
-        var(--azul-900),
-        color-mix(in oklab, var(--azul-700) 55%, var(--card))
-      );
+    background-color: var(--azul-900);
+  }
+
+  .hero-photo {
+    z-index: -2;
+  }
+
+  .hero-band::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background: linear-gradient(135deg, rgb(16 43 70 / 94%), rgb(16 43 70 / 78%));
+  }
+
+  .hero-content {
+    position: relative;
   }
 }
 

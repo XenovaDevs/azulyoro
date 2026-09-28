@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg id="Capa_1" data-name="Capa 1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1080 1080">
+  <defs>
+    <style>
+      .cls-1 {
+        letter-spacing: -.05em;
+      }
+
+      .cls-2 {
+        font-family: Poppins-Bold, Poppins;
+        font-size: 70.47px;
+      }
+
+      .cls-2, .cls-3 {
+        fill: #000;
+        font-weight: 700;
+      }
+
+      .cls-4 {
+        fill: none;
+        stroke: #000;
+        stroke-miterlimit: 10;
+        stroke-width: 28.76px;
+      }
+
+      .cls-3 {
+        font-family: Microsport-Bold, Microsport;
+        font-size: 192px;
+      }
+    </style>
+  </defs>
+  <path class="cls-4" d="M441.43,704.69c-20.14,16.74-42.17,32.39-65.9,47.06-2.64,1.63-6.12,1.71-8.83.18-105.62-59.73-195.5-155.32-205.54-336.59-.12-2.2.83-4.35,2.59-5.85l111.67-95.28c2.17-1.85,5.27-2.42,8.08-1.55,56.26,17.5,114.68,17.23,175.28-.13,2.78-.8,5.83-.19,7.95,1.65l65.02,56.39"/>
+  <text class="cls-3" transform="translate(308.33 524.85)"><tspan x="0" y="0">AZU</tspan><tspan class="cls-1" x="466.55" y="0">L</tspan><tspan x="592.31" y="0"> </tspan></text>
+  <text class="cls-3" transform="translate(251.39 677.82)"><tspan x="0" y="0" xml:space="preserve"> ORO</tspan></text>
+  <text class="cls-2" transform="translate(841.61 470.41)"><tspan x="0" y="0">&amp;</tspan></text>
+</svg>

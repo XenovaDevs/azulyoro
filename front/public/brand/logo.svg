@@ -1,8 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128" role="img" aria-label="Azul y Oro">
-  <rect width="128" height="128" rx="28" fill="#152a63"/>
-  <text x="50%" y="50%" dy="0.02em" text-anchor="middle" dominant-baseline="central"
-        font-family="'Space Grotesk', Arial, sans-serif" font-weight="700" font-size="52" letter-spacing="-2">
-    <tspan fill="#f5f7fc">Ay</tspan><tspan fill="#f4b322">O</tspan>
-  </text>
-  <rect x="32" y="94" width="64" height="8" rx="4" fill="#f4b322"/>
-</svg>
